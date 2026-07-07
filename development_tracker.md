@@ -27,24 +27,24 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 1 — Database Schema & Migrations
 
-- [ ] `User` (role enum, unique username/email)
-- [ ] `Job` (status enum, created_by)
-- [ ] `JobUser` (unique (job_id, user_id))
-- [ ] `JobStage` (unique (job_id, position))
-- [ ] `Candidate` (all 8.1 fields; unique (job_id, email), unique (job_id, phone); resume NOT NULL)
-- [ ] `CandidateComment` (visibility enum, soft delete)
-- [ ] `CommentAttachment`
-- [ ] `CommentMention`
-- [ ] `CandidateStageHistory`
-- [ ] `CandidateAssignmentHistory`
-- [ ] `CandidateOfferDetails` (1:1 with candidate)
-- [ ] `Notification`
-- [ ] `AuditLog` (metadata JSON)
-- [ ] Cascade rules and referential integrity
-- [ ] First migration generated and applied
-- [ ] Seed script (admin user + defaults)
+- [x] `User` (role enum, unique username/email)
+- [x] `Job` (status enum, created_by)
+- [x] `JobUser` (unique (job_id, user_id))
+- [x] `JobStage` (unique (job_id, position))
+- [x] `Candidate` (all 8.1 fields; unique (job_id, email), unique (job_id, phone); resume NOT NULL)
+- [x] `CandidateComment` (visibility enum, soft delete)
+- [x] `CommentAttachment`
+- [x] `CommentMention`
+- [x] `CandidateStageHistory`
+- [x] `CandidateAssignmentHistory`
+- [x] `CandidateOfferDetails` (1:1 with candidate)
+- [x] `Notification`
+- [x] `AuditLog` (metadata JSON)
+- [x] Cascade rules and referential integrity
+- [x] First migration generated and applied
+- [x] Seed script (admin user + defaults)
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** All Section 17 entities present · DB constraints for duplicates enforced
 
 ---

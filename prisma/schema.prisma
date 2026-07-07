@@ -16,3 +16,321 @@ enum JobStatus {
   open
   closed
 }
+
+enum CommentVisibility {
+  job
+  admin
+}
+
+enum OfferStatus {
+  not_offered
+  offered
+  accepted
+  rejected
+  joined
+}
+
+enum NotificationType {
+  resume_assignment
+  comment_mention
+}
+
+enum AuditAction {
+  user_created
+  user_updated
+  user_deactivated
+  job_created
+  job_updated
+  job_closed
+  job_user_attached
+  job_user_detached
+  stage_created
+  stage_updated
+  stage_reordered
+  stage_deleted
+  candidate_created
+  candidate_updated
+  candidate_resume_replaced
+  candidate_stage_moved
+  candidate_assigned
+  candidate_feedback_updated
+  comment_created
+  comment_updated
+  comment_deleted
+  offer_created
+  offer_updated
+  notification_created
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  username     String   @unique
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(user)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  jobsCreated                 Job[]                        @relation("JobCreatedBy")
+  jobMemberships              JobUser[]                    @relation("JobUserUser")
+  jobAttachments              JobUser[]                    @relation("JobUserAttachedBy")
+  candidatesCreated           Candidate[]                  @relation("CandidateCreatedBy")
+  assignedCandidates          Candidate[]                  @relation("CandidateAssignedUser")
+  comments                    CandidateComment[]           @relation("CandidateCommentAuthor")
+  commentAttachments          CommentAttachment[]          @relation("CommentAttachmentUploadedBy")
+  commentMentions             CommentMention[]             @relation("CommentMentionMentionedUser")
+  stageMovements              CandidateStageHistory[]      @relation("CandidateStageHistoryMovedBy")
+  assignmentHistoryAssigned   CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryAssignedBy")
+  previousAssignmentHistory   CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryPreviousAssignee")
+  newAssignmentHistory        CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryNewAssignee")
+  notifications               Notification[]               @relation("NotificationRecipient")
+  auditLogs                   AuditLog[]                   @relation("AuditLogActor")
+
+  @@map("users")
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  status      JobStatus @default(open)
+  createdById String    @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  createdBy     User           @relation("JobCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  users         JobUser[]
+  stages        JobStage[]
+  candidates    Candidate[]
+  notifications Notification[]
+
+  @@index([status])
+  @@index([createdById])
+  @@map("jobs")
+}
+
+model JobUser {
+  id           String   @id @default(cuid())
+  jobId        String   @map("job_id")
+  userId       String   @map("user_id")
+  attachedById String   @map("attached_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  job        Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user       User @relation("JobUserUser", fields: [userId], references: [id], onDelete: Cascade)
+  attachedBy User @relation("JobUserAttachedBy", fields: [attachedById], references: [id], onDelete: Restrict)
+
+  @@unique([jobId, userId])
+  @@index([userId])
+  @@index([attachedById])
+  @@map("job_users")
+}
+
+model JobStage {
+  id        String   @id @default(cuid())
+  jobId     String   @map("job_id")
+  name      String
+  position  Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  job                       Job                     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidates                Candidate[]             @relation("CandidateCurrentStage")
+  stageHistoryFrom          CandidateStageHistory[] @relation("CandidateStageHistoryFromStage")
+  stageHistoryTo            CandidateStageHistory[] @relation("CandidateStageHistoryToStage")
+
+  @@unique([jobId, position])
+  @@unique([jobId, name])
+  @@index([jobId])
+  @@map("job_stages")
+}
+
+model Candidate {
+  id                 String   @id @default(cuid())
+  jobId              String   @map("job_id")
+  name               String
+  email              String
+  phone              String
+  totalExperience    Decimal  @map("total_experience") @db.Decimal(5, 2)
+  relevantExperience Decimal  @map("relevant_experience") @db.Decimal(5, 2)
+  currentCity        String   @map("current_city")
+  currentCtc         Decimal? @map("current_ctc") @db.Decimal(12, 2)
+  expectedCtc        Decimal? @map("expected_ctc") @db.Decimal(12, 2)
+  noticePeriod       String   @map("notice_period")
+  resumeFilePath     String   @map("resume_file_path")
+  source             String
+  currentStageId     String   @map("current_stage_id")
+  assignedUserId     String?  @map("assigned_user_id")
+  feedback           String?  @db.Text
+  createdById        String   @map("created_by")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  job               Job                          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  currentStage      JobStage                     @relation("CandidateCurrentStage", fields: [currentStageId], references: [id], onDelete: Restrict)
+  assignedUser      User?                        @relation("CandidateAssignedUser", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  createdBy         User                         @relation("CandidateCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  comments          CandidateComment[]
+  stageHistory      CandidateStageHistory[]
+  assignmentHistory CandidateAssignmentHistory[]
+  offerDetails      CandidateOfferDetails?
+  notifications     Notification[]
+
+  @@unique([jobId, email])
+  @@unique([jobId, phone])
+  @@index([jobId, currentStageId])
+  @@index([assignedUserId])
+  @@index([createdById])
+  @@map("candidates")
+}
+
+model CandidateComment {
+  id          String            @id @default(cuid())
+  candidateId String            @map("candidate_id")
+  authorId    String            @map("author_id")
+  body        String            @db.Text
+  visibility  CommentVisibility @default(job)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  deletedAt   DateTime?         @map("deleted_at")
+
+  candidate   Candidate           @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  author      User                @relation("CandidateCommentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  attachments CommentAttachment[]
+  mentions    CommentMention[]
+
+  @@index([candidateId, createdAt])
+  @@index([authorId])
+  @@index([visibility])
+  @@map("candidate_comments")
+}
+
+model CommentAttachment {
+  id          String   @id @default(cuid())
+  commentId   String   @map("comment_id")
+  fileName    String   @map("file_name")
+  filePath    String   @map("file_path")
+  mimeType    String   @map("mime_type")
+  fileSize    BigInt   @map("file_size")
+  uploadedById String   @map("uploaded_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  comment    CandidateComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  uploadedBy User             @relation("CommentAttachmentUploadedBy", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([commentId])
+  @@index([uploadedById])
+  @@map("comment_attachments")
+}
+
+model CommentMention {
+  id              String   @id @default(cuid())
+  commentId       String   @map("comment_id")
+  mentionedUserId String   @map("mentioned_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  comment       CandidateComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  mentionedUser User             @relation("CommentMentionMentionedUser", fields: [mentionedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, mentionedUserId])
+  @@index([mentionedUserId])
+  @@map("comment_mentions")
+}
+
+model CandidateStageHistory {
+  id           String   @id @default(cuid())
+  candidateId  String   @map("candidate_id")
+  fromStageId  String?  @map("from_stage_id")
+  toStageId    String   @map("to_stage_id")
+  movedById    String   @map("moved_by")
+  comment      String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  fromStage JobStage? @relation("CandidateStageHistoryFromStage", fields: [fromStageId], references: [id], onDelete: SetNull)
+  toStage   JobStage  @relation("CandidateStageHistoryToStage", fields: [toStageId], references: [id], onDelete: Restrict)
+  movedBy   User      @relation("CandidateStageHistoryMovedBy", fields: [movedById], references: [id], onDelete: Restrict)
+
+  @@index([candidateId, createdAt])
+  @@index([fromStageId])
+  @@index([toStageId])
+  @@index([movedById])
+  @@map("candidate_stage_history")
+}
+
+model CandidateAssignmentHistory {
+  id                 String   @id @default(cuid())
+  candidateId        String   @map("candidate_id")
+  previousAssigneeId String?  @map("previous_assignee_id")
+  newAssigneeId      String?  @map("new_assignee_id")
+  assignedById       String   @map("assigned_by")
+  comment            String?  @db.Text
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  candidate        Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  previousAssignee User?     @relation("CandidateAssignmentHistoryPreviousAssignee", fields: [previousAssigneeId], references: [id], onDelete: SetNull)
+  newAssignee      User?     @relation("CandidateAssignmentHistoryNewAssignee", fields: [newAssigneeId], references: [id], onDelete: SetNull)
+  assignedBy       User      @relation("CandidateAssignmentHistoryAssignedBy", fields: [assignedById], references: [id], onDelete: Restrict)
+
+  @@index([candidateId, createdAt])
+  @@index([previousAssigneeId])
+  @@index([newAssigneeId])
+  @@index([assignedById])
+  @@map("candidate_assignment_history")
+}
+
+model CandidateOfferDetails {
+  id          String      @id @default(cuid())
+  candidateId String      @unique @map("candidate_id")
+  offeredCtc  Decimal?    @map("offered_ctc") @db.Decimal(12, 2)
+  offerDate   DateTime?   @map("offer_date") @db.Date
+  joiningDate DateTime?   @map("joining_date") @db.Date
+  offerStatus OfferStatus @default(not_offered) @map("offer_status")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_offer_details")
+}
+
+model Notification {
+  id                 String           @id @default(cuid())
+  recipientUserId    String           @map("recipient_user_id")
+  type               NotificationType
+  title              String
+  body               String           @db.Text
+  relatedJobId       String?          @map("related_job_id")
+  relatedCandidateId String?          @map("related_candidate_id")
+  readAt             DateTime?        @map("read_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  recipient        User       @relation("NotificationRecipient", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  relatedJob       Job?       @relation(fields: [relatedJobId], references: [id], onDelete: Cascade)
+  relatedCandidate Candidate? @relation(fields: [relatedCandidateId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, readAt, createdAt])
+  @@index([relatedJobId])
+  @@index([relatedCandidateId])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  actorId    String?     @map("actor_user_id")
+  action     AuditAction
+  entityType String      @map("entity_type")
+  entityId   String      @map("entity_id")
+  metadata   Json?
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  actor User? @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

@@ -39,22 +39,22 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 - Implement all entities listed in `requirements.md` Section 17 with correct constraints.
 
 ### Tasks
-- [ ] Define `User` (role enum `admin`/`user`, `username` unique, `email` unique).
-- [ ] Define `Job` (status enum `open`/`closed`, `created_by` relation).
-- [ ] Define `JobUser` (unique constraint on `(job_id, user_id)`).
-- [ ] Define `JobStage` (unique `(job_id, position)`, belongs to one job).
-- [ ] Define `Candidate` with all fields from 8.1/17.5; add unique constraint on `(job_id, email)` and `(job_id, phone)`; `resume_file_path` NOT NULL.
-- [ ] Define `CandidateComment` with `visibility` enum (`job`/`admin`), soft delete via `deleted_at`.
-- [ ] Define `CommentAttachment` (belongs to comment).
-- [ ] Define `CommentMention` (belongs to comment + mentioned user).
-- [ ] Define `CandidateStageHistory` (from/to stage, moved_by, optional comment).
-- [ ] Define `CandidateAssignmentHistory` (previous/new assignee, assigned_by, optional comment).
-- [ ] Define `CandidateOfferDetails` (one-to-one with candidate).
-- [ ] Define `Notification` (recipient, type, title, body, related job/candidate, `read_at`).
-- [ ] Define `AuditLog` (actor, action, entity_type, entity_id, `metadata` JSON).
-- [ ] Add cascade rules and referential integrity.
-- [ ] Generate and run the first migration.
-- [ ] Add a seed script for an admin user and default data.
+- [x] Define `User` (role enum `admin`/`user`, `username` unique, `email` unique).
+- [x] Define `Job` (status enum `open`/`closed`, `created_by` relation).
+- [x] Define `JobUser` (unique constraint on `(job_id, user_id)`).
+- [x] Define `JobStage` (unique `(job_id, position)`, belongs to one job).
+- [x] Define `Candidate` with all fields from 8.1/17.5; add unique constraint on `(job_id, email)` and `(job_id, phone)`; `resume_file_path` NOT NULL.
+- [x] Define `CandidateComment` with `visibility` enum (`job`/`admin`), soft delete via `deleted_at`.
+- [x] Define `CommentAttachment` (belongs to comment).
+- [x] Define `CommentMention` (belongs to comment + mentioned user).
+- [x] Define `CandidateStageHistory` (from/to stage, moved_by, optional comment).
+- [x] Define `CandidateAssignmentHistory` (previous/new assignee, assigned_by, optional comment).
+- [x] Define `CandidateOfferDetails` (one-to-one with candidate).
+- [x] Define `Notification` (recipient, type, title, body, related job/candidate, `read_at`).
+- [x] Define `AuditLog` (actor, action, entity_type, entity_id, `metadata` JSON).
+- [x] Add cascade rules and referential integrity.
+- [x] Generate and run the first migration.
+- [x] Add a seed script for an admin user and default data.
 
 ### Acceptance Criteria (req 20.2)
 - Candidate belongs to a job and a stage.
