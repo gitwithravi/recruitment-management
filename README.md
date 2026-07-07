@@ -69,3 +69,13 @@ The local Docker service exposes PostgreSQL on `localhost:5432` with:
 - password: `recruitment_password`
 
 The matching connection string is stored in `.env.example`.
+
+## Local Admin Login
+
+After running `npm run db:seed`, the local admin account is:
+
+- username: `admin`
+- email: `admin@example.com`
+- password: `Admin@123`
+
+Change this password before using the app outside local development.

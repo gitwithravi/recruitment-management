@@ -7,12 +7,12 @@ export default function Home() {
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <Badge variant="outline">Bootstrap complete</Badge>
+        <Badge variant="outline">Authentication enabled</Badge>
         <div className="max-w-3xl space-y-2">
           <h1 className="text-3xl font-semibold tracking-normal">Recruitment workflow</h1>
           <p className="text-muted-foreground">
-            Phase 0 establishes the Next.js app, PostgreSQL service, Prisma foundation, shadcn/ui
-            components, and shared layout for the internal recruitment system.
+            Phase 2 protects the application with internal login, signed httpOnly sessions,
+            role-aware server guards, and inactive-user checks.
           </p>
         </div>
       </section>
@@ -37,27 +37,27 @@ export default function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Admin and user access rules will be enforced server-side.
+            Admin and user access rules are enforced server-side.
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldCheck className="size-4" aria-hidden="true" />
-              Audit-ready
+              Guarded sessions
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Prisma and PostgreSQL are ready for the Phase 1 data model.
+            Inactive users are rejected during sign-in and current-user lookup.
           </CardContent>
         </Card>
       </section>
 
       <section className="rounded-lg border bg-card p-4 text-sm text-card-foreground">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span>Next step: Phase 1 database schema and migrations.</span>
+          <span>Next step: Admin user management.</span>
           <span className="inline-flex items-center gap-1 text-muted-foreground">
-            development_plan.md <ArrowRight className="size-4" aria-hidden="true" /> Phase 1
+            development_plan.md <ArrowRight className="size-4" aria-hidden="true" /> Phase 3
           </span>
         </div>
       </section>

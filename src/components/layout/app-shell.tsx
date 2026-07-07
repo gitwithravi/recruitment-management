@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { logoutAction } from "@/server/auth/actions";
+import type { CurrentUser } from "@/server/auth/session";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -12,7 +14,7 @@ const navItems = [
   { href: "/admin/users", label: "Users", icon: UsersRound },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, user }: { children: React.ReactNode; user: CurrentUser }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
@@ -22,10 +24,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span>Recruitment</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">Phase 0</Badge>
-            <Button variant="outline" size="sm">
-              Sign in
-            </Button>
+            <Badge variant="secondary">{user.role}</Badge>
+            <span className="hidden text-sm text-muted-foreground sm:inline">{user.name}</span>
+            <form action={logoutAction}>
+              <Button variant="outline" size="sm" type="submit">
+                Logout
+              </Button>
+            </form>
           </div>
         </div>
       </header>
@@ -46,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
           <Separator className="my-4 hidden md:block" />
           <p className="hidden px-2 text-xs leading-5 text-muted-foreground md:block">
-            Internal recruitment workflow bootstrap.
+            Signed in as @{user.username}.
           </p>
         </aside>
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>

@@ -14,7 +14,7 @@ VALUES (
   'System Admin',
   'admin',
   'admin@example.com',
-  'phase-2-auth-placeholder-change-before-login',
+  '$argon2id$v=19$m=65536,t=3,p=4$uMBoEdHih5j0goivzIv/aA$whgzSGy0xb0XoKRDkxJ/dEwa0eM7UxxrXOZ1TbPpP+8',
   'admin',
   true,
   NOW(),
@@ -23,6 +23,7 @@ VALUES (
 ON CONFLICT (username) DO UPDATE SET
   name = EXCLUDED.name,
   email = EXCLUDED.email,
+  password_hash = EXCLUDED.password_hash,
   role = EXCLUDED.role,
   is_active = EXCLUDED.is_active,
   updated_at = NOW();

@@ -71,16 +71,16 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 - Internal-only authentication with role-aware session.
 
 ### Tasks
-- [ ] Choose auth approach (NextAuth credentials provider or custom session with httpOnly cookie + JWT).
-- [ ] Implement `password_hash` storage using bcrypt/argon2.
-- [ ] Implement login form at `/login`.
-- [ ] Implement login server action / route handler.
-- [ ] Implement logout.
-- [ ] Add session helper `getCurrentUser()` and `requireUser()`.
-- [ ] Add `requireAdmin()` and `requireJobAccess(jobId)` guards.
-- [ ] Add middleware to protect all routes except `/login`.
-- [ ] Add `is_active` check on every auth flow.
-- [ ] Add a basic header showing the logged-in user and a logout button.
+- [x] Choose auth approach (NextAuth credentials provider or custom session with httpOnly cookie + JWT).
+- [x] Implement `password_hash` storage using bcrypt/argon2.
+- [x] Implement login form at `/login`.
+- [x] Implement login server action / route handler.
+- [x] Implement logout.
+- [x] Add session helper `getCurrentUser()` and `requireUser()`.
+- [x] Add `requireAdmin()` and `requireJobAccess(jobId)` guards.
+- [x] Add middleware to protect all routes except `/login`.
+- [x] Add `is_active` check on every auth flow.
+- [x] Add a basic header showing the logged-in user and a logout button.
 
 ### Acceptance Criteria (req 20.1, 4, 5)
 - All pages require authentication.

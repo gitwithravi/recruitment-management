@@ -51,18 +51,18 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 2 — Authentication & Session Management
 
-- [ ] Choose and implement auth (NextAuth credentials or custom JWT + httpOnly cookie)
-- [ ] `password_hash` with bcrypt/argon2
-- [ ] Login form at `/login`
-- [ ] Login server action / route handler
-- [ ] Logout
-- [ ] `getCurrentUser()` / `requireUser()` helpers
-- [ ] `requireAdmin()` / `requireJobAccess(jobId)` guards
-- [ ] Route middleware protecting everything except `/login`
-- [ ] `is_active` check on auth
-- [ ] Header with current user + logout
+- [x] Choose and implement auth (NextAuth credentials or custom JWT + httpOnly cookie)
+- [x] `password_hash` with bcrypt/argon2
+- [x] Login form at `/login`
+- [x] Login server action / route handler
+- [x] Logout
+- [x] `getCurrentUser()` / `requireUser()` helpers
+- [x] `requireAdmin()` / `requireJobAccess(jobId)` guards
+- [x] Route middleware protecting everything except `/login`
+- [x] `is_active` check on auth
+- [x] Header with current user + logout
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** All pages require auth · roles distinguished · inactive users blocked
 
 ---
