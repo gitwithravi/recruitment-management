@@ -95,13 +95,13 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 - Admin can create and manage users.
 
 ### Tasks
-- [ ] `GET /admin/users` — list users (Admin only).
-- [ ] `POST /admin/users` — create user (name, username, email, role, initial password).
-- [ ] `PATCH /admin/users/[id]` — update user (name, email, role, is_active, password reset).
-- [ ] User list UI with shadcn `DataTable`.
-- [ ] User create/edit dialog form with validation.
-- [ ] Audit log on user create/update/deactivate.
-- [ ] Prevent admin from deactivating themselves.
+- [x] `GET /admin/users` — list users (Admin only).
+- [x] `POST /admin/users` — create user (name, username, email, role, initial password).
+- [x] `PATCH /admin/users/[id]` — update user (name, email, role, is_active, password reset).
+- [x] User list UI with shadcn `DataTable`.
+- [x] User create/edit dialog form with validation.
+- [x] Audit log on user create/update/deactivate.
+- [x] Prevent admin from deactivating themselves.
 
 ### Acceptance Criteria (req 5.1)
 - Admin can create users.

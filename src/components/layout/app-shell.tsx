@@ -91,7 +91,7 @@ export function AppShell({ children, user }: { children: React.ReactNode; user: 
             className="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto p-3"
             style={{ width: SIDEBAR_WIDTH }}
           >
-            <SidebarNav className="flex-col overflow-visible pb-0" />
+            <SidebarNav className="flex-col overflow-visible pb-0" role={user.role} />
             <Separator className="my-4" />
             <div className="space-y-1 px-3">
               <p className="text-xs leading-5 text-muted-foreground">
@@ -135,6 +135,7 @@ export function AppShell({ children, user }: { children: React.ReactNode; user: 
               <SidebarNav
                 className="flex-col overflow-visible pb-0"
                 onNavigate={() => setMobileOpen(false)}
+                role={user.role}
               />
               <Separator className="my-4" />
               <div className="space-y-1 px-3">

@@ -6,10 +6,18 @@ import { BriefcaseBusiness, LayoutDashboard, UsersRound } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  adminOnly?: boolean;
+};
+
+const navItems: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness },
-  { href: "/admin/users", label: "Users", icon: UsersRound },
+  { href: "/admin/users", label: "Users", icon: UsersRound, adminOnly: true },
 ];
 
 function isActive(pathname: string, href: string, exact?: boolean) {
@@ -19,15 +27,18 @@ function isActive(pathname: string, href: string, exact?: boolean) {
 export function SidebarNav({
   className,
   onNavigate,
+  role,
 }: {
   className?: string;
   onNavigate?: () => void;
+  role: "admin" | "user";
 }) {
   const pathname = usePathname();
+  const items = navItems.filter((item) => !item.adminOnly || role === "admin");
 
   return (
     <nav className={cn("flex gap-1", className)}>
-      {navItems.map((item) => {
+      {items.map((item) => {
         const active = isActive(pathname, item.href, item.exact);
         const Icon = item.icon;
 

@@ -69,15 +69,15 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 3 — Admin: User Management
 
-- [ ] `GET /admin/users` (Admin only)
-- [ ] `POST /admin/users` (create)
-- [ ] `PATCH /admin/users/[id]` (update)
-- [ ] User list UI (shadcn DataTable)
-- [ ] User create/edit dialog with validation
-- [ ] Audit log on create/update/deactivate
-- [ ] Prevent admin from deactivating themselves
+- [x] `GET /admin/users` (Admin only)
+- [x] `POST /admin/users` (create)
+- [x] `PATCH /admin/users/[id]` (update)
+- [x] User list UI (shadcn DataTable)
+- [x] User create/edit dialog with validation
+- [x] Audit log on create/update/deactivate
+- [x] Prevent admin from deactivating themselves
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Admin can create/manage users · non-admins blocked
 
 ---
@@ -328,7 +328,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 0 — Bootstrap | Not started | |
 | 1 — Schema | Not started | |
 | 2 — Auth | Not started | |
-| 3 — User Mgmt | Not started | |
+| 3 — User Mgmt | Done | |
 | 4 — Jobs | Not started | |
 | 5 — Job Users | Not started | |
 | 6 — Stages | Not started | |
