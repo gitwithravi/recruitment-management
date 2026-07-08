@@ -252,15 +252,15 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 15 — Reports
 
-- [ ] `GET /reports/candidates-per-stage`
-- [ ] `GET /reports/assigned-per-user`
-- [ ] `GET /reports/source-counts`
-- [ ] `GET /reports/aging` (days in current stage)
-- [ ] Reports screen with job selector + relevant filters
-- [ ] Admin sees all jobs; users see attached jobs only
+- [x] `GET /reports/candidates-per-stage`
+- [x] `GET /reports/assigned-per-user`
+- [x] `GET /reports/source-counts`
+- [x] `GET /reports/aging` (days in current stage)
+- [x] Reports screen with job selector + relevant filters
+- [x] Admin sees all jobs; users see attached jobs only
 - [ ] Each report supports CSV export (Phase 16)
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Admin sees all four reports · data respects job access
 
 ---
@@ -340,13 +340,13 @@ Legend at the bottom maps statuses to a quick health summary.
 | 12 — Offers          | Done        |       |
 | 13 — Notifications   | Done        |       |
 | 14 — Search/Filters  | Done        |       |
-| 15 — Reports         | Not started |       |
+| 15 — Reports         | Done        |       |
 | 16 — CSV Export      | Not started |       |
 | 17 — Audit/History   | Not started |       |
 | 18 — Dashboard       | Not started |       |
 | 19 — Hardening/Tests | Not started |       |
 
-**Last updated:** Phase 14 complete
+**Last updated:** Phase 15 complete
 **Blockers / notes:** —
 
 ---

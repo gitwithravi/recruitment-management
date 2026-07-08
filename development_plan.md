@@ -435,12 +435,12 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] `GET /reports/candidates-per-stage` — counts grouped by stage per job.
-- [ ] `GET /reports/assigned-per-user` — resumes assigned to each user.
-- [ ] `GET /reports/source-counts` — candidate count grouped by source.
-- [ ] `GET /reports/aging` — days in current stage per candidate.
-- [ ] Reports screen with job selector and date/source filters where relevant.
-- [ ] Admin sees all jobs; users see only attached jobs (when exposed).
+- [x] `GET /reports/candidates-per-stage` — counts grouped by stage per job.
+- [x] `GET /reports/assigned-per-user` — resumes assigned to each user.
+- [x] `GET /reports/source-counts` — candidate count grouped by source.
+- [x] `GET /reports/aging` — days in current stage per candidate.
+- [x] Reports screen with job selector and date/source filters where relevant.
+- [x] Admin sees all jobs; users see only attached jobs (when exposed).
 - [ ] Each report reuses the CSV export helper.
 
 ### Acceptance Criteria (req 13)

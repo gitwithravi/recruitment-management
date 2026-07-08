@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BriefcaseBusiness, LayoutDashboard, UsersRound } from "lucide-react";
+import { BarChart3, BriefcaseBusiness, LayoutDashboard, UsersRound } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness },
+  { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/admin/users", label: "Users", icon: UsersRound, adminOnly: true },
 ];
 
