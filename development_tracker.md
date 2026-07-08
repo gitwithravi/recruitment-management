@@ -114,16 +114,16 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 6 — Stage Configuration (Admin)
 
-- [ ] `GET /jobs/[id]/stages`
-- [ ] `POST /jobs/[id]/stages` (add)
-- [ ] `PATCH /jobs/[id]/stages/[stageId]` (rename)
-- [ ] `POST /jobs/[id]/stages/reorder` (transaction)
-- [ ] `DELETE /jobs/[id]/stages/[stageId]` (only if empty)
-- [ ] Stage config UI with drag-and-drop (`@dnd-kit/sortable`)
-- [ ] Delete confirmation modal
-- [ ] Audit log on stage changes
+- [x] `GET /jobs/[id]/stages`
+- [x] `POST /jobs/[id]/stages` (add)
+- [x] `PATCH /jobs/[id]/stages/[stageId]` (rename)
+- [x] `POST /jobs/[id]/stages/reorder` (transaction)
+- [x] `DELETE /jobs/[id]/stages/[stageId]` (only if empty)
+- [x] Stage config UI with drag-and-drop (`@dnd-kit/sortable`)
+- [x] Delete confirmation modal
+- [x] Audit log on stage changes
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Rename/add/reorder/delete works · order reflected on board · empty-stage-only delete enforced
 
 ---
@@ -331,7 +331,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 3 — User Mgmt        | Done        |       |
 | 4 — Jobs             | Done        |       |
 | 5 — Job Users        | Done        |       |
-| 6 — Stages           | Not started |       |
+| 6 — Stages           | Done        |       |
 | 7 — Candidates       | Not started |       |
 | 8 — Board UI         | Not started |       |
 | 9 — Stage Move       | Not started |       |

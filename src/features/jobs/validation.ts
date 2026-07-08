@@ -6,6 +6,10 @@ export type JobFieldErrors = {
   status?: string;
 };
 
+export type StageFieldErrors = {
+  name?: string;
+};
+
 export type CreateJobInput = {
   title: string;
   description: string;
@@ -74,5 +78,24 @@ export function validateUpdateJob(input: {
   return {
     errors,
     input: hasErrors || !status ? null : { title, description, status },
+  };
+}
+
+export function validateStageName(value: string): {
+  errors: StageFieldErrors;
+  name: string | null;
+} {
+  const errors: StageFieldErrors = {};
+  const name = value.trim();
+
+  if (!name) {
+    errors.name = "Stage name is required.";
+  } else if (name.length > 80) {
+    errors.name = "Stage name must be 80 characters or fewer.";
+  }
+
+  return {
+    errors,
+    name: Object.keys(errors).length > 0 ? null : name,
   };
 }

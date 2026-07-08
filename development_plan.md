@@ -180,14 +180,14 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] `GET /jobs/[id]/stages` — list stages ordered by position.
-- [ ] `POST /jobs/[id]/stages` — add a stage (appends at end).
-- [ ] `PATCH /jobs/[id]/stages/[stageId]` — rename a stage.
-- [ ] `POST /jobs/[id]/stages/reorder` — accept an ordered list of stage IDs and update positions in a transaction.
-- [ ] `DELETE /jobs/[id]/stages/[stageId]` — delete a stage only if no candidates exist in it.
-- [ ] Stage configuration UI with drag-and-drop reordering (e.g., `@dnd-kit/sortable`).
-- [ ] Confirmation modal before delete.
-- [ ] Audit log on stage create/rename/reorder/delete.
+- [x] `GET /jobs/[id]/stages` — list stages ordered by position.
+- [x] `POST /jobs/[id]/stages` — add a stage (appends at end).
+- [x] `PATCH /jobs/[id]/stages/[stageId]` — rename a stage.
+- [x] `POST /jobs/[id]/stages/reorder` — accept an ordered list of stage IDs and update positions in a transaction.
+- [x] `DELETE /jobs/[id]/stages/[stageId]` — delete a stage only if no candidates exist in it.
+- [x] Stage configuration UI with drag-and-drop reordering (e.g., `@dnd-kit/sortable`).
+- [x] Confirmation modal before delete.
+- [x] Audit log on stage create/rename/reorder/delete.
 
 ### Acceptance Criteria (req 7.3, 7.5)
 

@@ -7,9 +7,12 @@ import { prisma } from "@/db/client";
 import { DEFAULT_JOB_STAGES } from "@/features/jobs/constants";
 import {
   validateCreateJob,
+  validateStageName,
   validateUpdateJob,
   type JobFieldErrors,
+  type StageFieldErrors,
 } from "@/features/jobs/validation";
+import { assertStageCanBeDeleted } from "@/server/data-integrity";
 import { writeAuditLog } from "@/server/audit";
 import { requireAdmin } from "@/server/auth/session";
 
@@ -35,7 +38,17 @@ export type DetachJobUserState = {
   error?: string;
 };
 
+export type StageFormState = {
+  errors: StageFieldErrors;
+  generic?: string;
+};
+
+export type StageMutationState = {
+  error?: string;
+};
+
 const EMPTY_ERRORS: JobFieldErrors = {};
+const EMPTY_STAGE_ERRORS: StageFieldErrors = {};
 
 export async function createJobAction(
   _previousState: CreateJobState,
@@ -372,5 +385,323 @@ export async function detachJobUserAction(
 
     console.error("detachJobUserAction failed", error);
     return { error: "Could not detach this user. Please try again." };
+  }
+}
+
+export async function addJobStageAction(
+  jobId: string,
+  _previousState: StageFormState,
+  formData: FormData,
+): Promise<StageFormState> {
+  const admin = await requireAdmin();
+  const { errors, name } = validateStageName(String(formData.get("name") ?? ""));
+
+  if (!name) {
+    return { errors };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const job = await tx.job.findUnique({
+        where: { id: jobId },
+        select: { id: true, title: true },
+      });
+
+      if (!job) {
+        throw new Error("JOB_NOT_FOUND");
+      }
+
+      const existing = await tx.jobStage.findFirst({
+        where: { jobId, name },
+        select: { id: true },
+      });
+
+      if (existing) {
+        throw new Error("STAGE_NAME_EXISTS");
+      }
+
+      const lastStage = await tx.jobStage.findFirst({
+        where: { jobId },
+        orderBy: { position: "desc" },
+        select: { position: true },
+      });
+
+      const stage = await tx.jobStage.create({
+        data: {
+          jobId,
+          name,
+          position: (lastStage?.position ?? 0) + 1,
+        },
+        select: { id: true, name: true, position: true },
+      });
+
+      await writeAuditLog(tx, {
+        actorId: admin.id,
+        action: "stage_created",
+        entityType: "job_stage",
+        entityId: stage.id,
+        metadata: {
+          jobId: job.id,
+          jobTitle: job.title,
+          name: stage.name,
+          position: stage.position,
+        },
+      });
+    });
+
+    revalidatePath(`/jobs/${jobId}`);
+    return { errors: EMPTY_STAGE_ERRORS };
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "JOB_NOT_FOUND") {
+        return { errors: EMPTY_STAGE_ERRORS, generic: "This job no longer exists." };
+      }
+      if (error.message === "STAGE_NAME_EXISTS") {
+        return { errors: { name: "A stage with this name already exists." } };
+      }
+    }
+
+    console.error("addJobStageAction failed", error);
+    return {
+      errors: EMPTY_STAGE_ERRORS,
+      generic: "Could not add the stage. Please try again.",
+    };
+  }
+}
+
+export async function renameJobStageAction(
+  jobId: string,
+  stageId: string,
+  _previousState: StageFormState,
+  formData: FormData,
+): Promise<StageFormState> {
+  const admin = await requireAdmin();
+  const { errors, name } = validateStageName(String(formData.get("name") ?? ""));
+
+  if (!name) {
+    return { errors };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const stage = await tx.jobStage.findFirst({
+        where: { id: stageId, jobId },
+        select: {
+          id: true,
+          name: true,
+          position: true,
+          job: { select: { id: true, title: true } },
+        },
+      });
+
+      if (!stage) {
+        throw new Error("STAGE_NOT_FOUND");
+      }
+
+      const existing = await tx.jobStage.findFirst({
+        where: { jobId, name, NOT: { id: stageId } },
+        select: { id: true },
+      });
+
+      if (existing) {
+        throw new Error("STAGE_NAME_EXISTS");
+      }
+
+      const updated = await tx.jobStage.update({
+        where: { id: stageId },
+        data: { name },
+        select: { id: true, name: true, position: true },
+      });
+
+      await writeAuditLog(tx, {
+        actorId: admin.id,
+        action: "stage_updated",
+        entityType: "job_stage",
+        entityId: updated.id,
+        metadata: {
+          jobId: stage.job.id,
+          jobTitle: stage.job.title,
+          previousName: stage.name,
+          nextName: updated.name,
+          position: updated.position,
+        },
+      });
+    });
+
+    revalidatePath(`/jobs/${jobId}`);
+    return { errors: EMPTY_STAGE_ERRORS };
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "STAGE_NOT_FOUND") {
+        return { errors: EMPTY_STAGE_ERRORS, generic: "This stage no longer exists." };
+      }
+      if (error.message === "STAGE_NAME_EXISTS") {
+        return { errors: { name: "A stage with this name already exists." } };
+      }
+    }
+
+    console.error("renameJobStageAction failed", error);
+    return {
+      errors: EMPTY_STAGE_ERRORS,
+      generic: "Could not rename the stage. Please try again.",
+    };
+  }
+}
+
+export async function reorderJobStagesAction(
+  jobId: string,
+  orderedStageIds: string[],
+): Promise<StageMutationState> {
+  const admin = await requireAdmin();
+
+  if (orderedStageIds.length === 0) {
+    return { error: "Stage order cannot be empty." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const job = await tx.job.findUnique({
+        where: { id: jobId },
+        select: { id: true, title: true },
+      });
+
+      if (!job) {
+        throw new Error("JOB_NOT_FOUND");
+      }
+
+      const stages = await tx.jobStage.findMany({
+        where: { jobId },
+        orderBy: { position: "asc" },
+        select: { id: true, name: true, position: true },
+      });
+
+      const existingIds = new Set(stages.map((stage) => stage.id));
+      const inputIds = new Set(orderedStageIds);
+
+      if (
+        existingIds.size !== inputIds.size ||
+        orderedStageIds.some((id) => !existingIds.has(id))
+      ) {
+        throw new Error("INVALID_STAGE_ORDER");
+      }
+
+      for (const [index, stageId] of orderedStageIds.entries()) {
+        await tx.jobStage.update({
+          where: { id: stageId },
+          data: { position: -(index + 1) },
+        });
+      }
+
+      for (const [index, stageId] of orderedStageIds.entries()) {
+        await tx.jobStage.update({
+          where: { id: stageId },
+          data: { position: index + 1 },
+        });
+      }
+
+      await writeAuditLog(tx, {
+        actorId: admin.id,
+        action: "stage_reordered",
+        entityType: "job",
+        entityId: job.id,
+        metadata: {
+          jobId: job.id,
+          jobTitle: job.title,
+          previousOrder: stages.map((stage) => ({
+            id: stage.id,
+            name: stage.name,
+            position: stage.position,
+          })),
+          nextOrder: orderedStageIds.map((id, index) => ({ id, position: index + 1 })),
+        },
+      });
+    });
+
+    revalidatePath(`/jobs/${jobId}`);
+    return {};
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "JOB_NOT_FOUND") {
+        return { error: "This job no longer exists." };
+      }
+      if (error.message === "INVALID_STAGE_ORDER") {
+        return { error: "Stage order is out of date. Refresh and try again." };
+      }
+    }
+
+    console.error("reorderJobStagesAction failed", error);
+    return { error: "Could not reorder stages. Please try again." };
+  }
+}
+
+export async function deleteJobStageAction(
+  jobId: string,
+  stageId: string,
+): Promise<StageMutationState> {
+  const admin = await requireAdmin();
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const stage = await tx.jobStage.findFirst({
+        where: { id: stageId, jobId },
+        select: {
+          id: true,
+          name: true,
+          position: true,
+          job: { select: { id: true, title: true } },
+        },
+      });
+
+      if (!stage) {
+        throw new Error("STAGE_NOT_FOUND");
+      }
+
+      await assertStageCanBeDeleted(tx, stage.id);
+
+      await tx.jobStage.delete({
+        where: { id: stage.id },
+      });
+
+      const remainingStages = await tx.jobStage.findMany({
+        where: { jobId },
+        orderBy: { position: "asc" },
+        select: { id: true },
+      });
+
+      for (const [index, remainingStage] of remainingStages.entries()) {
+        await tx.jobStage.update({
+          where: { id: remainingStage.id },
+          data: { position: index + 1 },
+        });
+      }
+
+      await writeAuditLog(tx, {
+        actorId: admin.id,
+        action: "stage_deleted",
+        entityType: "job_stage",
+        entityId: stage.id,
+        metadata: {
+          jobId: stage.job.id,
+          jobTitle: stage.job.title,
+          name: stage.name,
+          position: stage.position,
+        },
+      });
+    });
+
+    revalidatePath(`/jobs/${jobId}`);
+    return {};
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "STAGE_NOT_FOUND") {
+        return { error: "This stage no longer exists." };
+      }
+      if (error.message === "Stage cannot be deleted while candidates exist in it.") {
+        return { error: "Only empty stages can be deleted." };
+      }
+    }
+
+    console.error("deleteJobStageAction failed", error);
+    return { error: "Could not delete this stage. Please try again." };
   }
 }

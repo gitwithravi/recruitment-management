@@ -6,9 +6,10 @@ import { ArrowLeft, BarChart3, Columns3, ListChecks, UsersRound, Workflow } from
 import { JobActions } from "@/components/jobs/job-actions";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { JobUsersPanel } from "@/components/jobs/job-users-panel";
+import { StageConfigPanel } from "@/components/jobs/stage-config-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJobForUser, listAssignableUsersForJob } from "@/features/jobs/queries";
 import { cn } from "@/lib/utils";
 import { requireJobAccess } from "@/server/auth/session";
@@ -134,7 +135,14 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
           description="Candidate list and creation workflow are scheduled for Phase 7."
         />
       ) : null}
-      {activeTab === "stages" ? <StagesTab job={job} canManageJobs={canManageJobs} /> : null}
+      {activeTab === "stages" ? (
+        <StageConfigPanel
+          key={job.stages.map((stage) => `${stage.id}:${stage.position}`).join("|")}
+          jobId={job.id}
+          stages={job.stages}
+          canManageJobs={canManageJobs}
+        />
+      ) : null}
       {activeTab === "users" ? (
         <JobUsersPanel
           jobId={job.id}
@@ -177,42 +185,6 @@ function BoardTab({ job }: { job: NonNullable<Awaited<ReturnType<typeof getJobFo
         </section>
       ))}
     </div>
-  );
-}
-
-function StagesTab({
-  job,
-  canManageJobs,
-}: {
-  job: NonNullable<Awaited<ReturnType<typeof getJobForUser>>>;
-  canManageJobs: boolean;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Stages</CardTitle>
-        <CardDescription>
-          {canManageJobs
-            ? "Stage configuration controls arrive in Phase 6. The seeded stages are listed below."
-            : "Users can view the job workflow but cannot configure stages."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {job.stages.map((stage) => (
-          <div
-            key={stage.id}
-            className="flex items-center justify-between rounded-lg border px-3 py-2"
-          >
-            <div>
-              <p className="text-sm font-medium">
-                {stage.position}. {stage.name}
-              </p>
-              <p className="text-xs text-muted-foreground">{stage.candidateCount} candidates</p>
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
   );
 }
 
