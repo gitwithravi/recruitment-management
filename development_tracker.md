@@ -84,17 +84,17 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 4 — Job Management
 
-- [ ] `GET /jobs` (role-scoped list)
-- [ ] `POST /jobs` (Admin) + seed default stages in transaction
-- [ ] `GET /jobs/[id]` (guarded by `requireJobAccess`)
-- [ ] `PATCH /jobs/[id]` (Admin)
-- [ ] `POST /jobs/[id]/close` (Admin)
-- [ ] Jobs list UI with status badges/filters
-- [ ] Job create/edit dialog
-- [ ] Job detail layout with tabs (Board, Candidates, Stages, Users, Reports)
-- [ ] Audit log on create/edit/close
+- [x] `GET /jobs` (role-scoped list)
+- [x] `POST /jobs` (Admin) + seed default stages in transaction
+- [x] `GET /jobs/[id]` (guarded by `requireJobAccess`)
+- [x] `PATCH /jobs/[id]` (Admin)
+- [x] `POST /jobs/[id]/close` (Admin)
+- [x] Jobs list UI with status badges/filters
+- [x] Job create/edit dialog
+- [x] Job detail layout with tabs (Board, Candidates, Stages, Users, Reports)
+- [x] Audit log on create/edit/close
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Admin creates jobs · attached users see them · unattached users blocked · close preserves data · default stages auto-created
 
 ---
@@ -323,28 +323,28 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Overall Progress Summary
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| 0 — Bootstrap | Not started | |
-| 1 — Schema | Not started | |
-| 2 — Auth | Not started | |
-| 3 — User Mgmt | Done | |
-| 4 — Jobs | Not started | |
-| 5 — Job Users | Not started | |
-| 6 — Stages | Not started | |
-| 7 — Candidates | Not started | |
-| 8 — Board UI | Not started | |
-| 9 — Stage Move | Not started | |
-| 10 — Assignment | Not started | |
-| 11 — Comments | Not started | |
-| 12 — Offers | Not started | |
-| 13 — Notifications | Not started | |
-| 14 — Search/Filters | Not started | |
-| 15 — Reports | Not started | |
-| 16 — CSV Export | Not started | |
-| 17 — Audit/History | Not started | |
-| 18 — Dashboard | Not started | |
-| 19 — Hardening/Tests | Not started | |
+| Phase                | Status      | Notes |
+| -------------------- | ----------- | ----- |
+| 0 — Bootstrap        | Not started |       |
+| 1 — Schema           | Not started |       |
+| 2 — Auth             | Not started |       |
+| 3 — User Mgmt        | Done        |       |
+| 4 — Jobs             | Done        |       |
+| 5 — Job Users        | Not started |       |
+| 6 — Stages           | Not started |       |
+| 7 — Candidates       | Not started |       |
+| 8 — Board UI         | Not started |       |
+| 9 — Stage Move       | Not started |       |
+| 10 — Assignment      | Not started |       |
+| 11 — Comments        | Not started |       |
+| 12 — Offers          | Not started |       |
+| 13 — Notifications   | Not started |       |
+| 14 — Search/Filters  | Not started |       |
+| 15 — Reports         | Not started |       |
+| 16 — CSV Export      | Not started |       |
+| 17 — Audit/History   | Not started |       |
+| 18 — Dashboard       | Not started |       |
+| 19 — Hardening/Tests | Not started |       |
 
 **Last updated:** —
 **Blockers / notes:** —
