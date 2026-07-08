@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.git
+.next
+node_modules
+npm-debug.log*
+Dockerfile
+docker-compose*.yml
+storage
+coverage
+*.tsbuildinfo
+README.md
+development_plan.md
+development_tracker.md
+testing_use_cases.md
