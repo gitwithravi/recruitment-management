@@ -54,6 +54,7 @@ function NotificationList({
           variant="ghost"
           size="sm"
           className="w-fit"
+          nativeButton={false}
           render={<Link href="/" />}
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -155,6 +156,7 @@ function NotificationList({
                             variant="ghost"
                             size="icon-xs"
                             aria-label="View candidate"
+                            nativeButton={false}
                             render={<Link href={linkHref} />}
                           >
                             <ExternalLink className="size-3.5" aria-hidden="true" />

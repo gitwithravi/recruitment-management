@@ -3,13 +3,14 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, BarChart3, Columns3, ListChecks, UsersRound, Workflow } from "lucide-react";
 
+import { CandidateBoard } from "@/components/candidates/candidate-board";
 import { JobActions } from "@/components/jobs/job-actions";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { JobUsersPanel } from "@/components/jobs/job-users-panel";
 import { StageConfigPanel } from "@/components/jobs/stage-config-panel";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCandidateBoardForJob } from "@/features/candidates/queries";
 import { getJobForUser, listAssignableUsersForJob } from "@/features/jobs/queries";
 import { cn } from "@/lib/utils";
 import { requireJobAccess } from "@/server/auth/session";
@@ -70,11 +71,12 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
   const canManageJobs = user.role === "admin";
   const assignableUsers =
     canManageJobs && activeTab === "users" ? await listAssignableUsersForJob(job.id) : [];
+  const board = activeTab === "board" ? await getCandidateBoardForJob(job.id) : null;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <Button variant="ghost" size="sm" className="w-fit" render={<Link href="/jobs" />}>
+        <Button variant="ghost" size="sm" className="w-fit" nativeButton={false} render={<Link href="/jobs" />}>
           <ArrowLeft className="size-4" aria-hidden="true" />
           Jobs
         </Button>
@@ -132,7 +134,14 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
         </nav>
       </div>
 
-      {activeTab === "board" ? <BoardTab job={job} /> : null}
+      {activeTab === "board" && board ? (
+        <CandidateBoard
+          jobId={job.id}
+          stages={board.stages}
+          candidates={board.candidates}
+          filters={board.filters}
+        />
+      ) : null}
       {activeTab === "candidates" ? (
         <PlaceholderTab
           title="Candidates"
@@ -170,24 +179,6 @@ function Metric({ label, value }: { label: string; value: string | number }) {
     <div className="rounded-lg border bg-card p-4">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className="mt-1 text-xl font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function BoardTab({ job }: { job: NonNullable<Awaited<ReturnType<typeof getJobForUser>>> }) {
-  return (
-    <div className="grid gap-3 lg:grid-cols-4">
-      {job.stages.map((stage) => (
-        <section key={stage.id} className="min-h-40 rounded-lg border bg-muted/30">
-          <div className="flex items-center justify-between border-b px-3 py-2">
-            <h2 className="text-sm font-medium">{stage.name}</h2>
-            <Badge variant="secondary">{stage.candidateCount}</Badge>
-          </div>
-          <div className="p-3">
-            <p className="text-xs text-muted-foreground">Candidate cards will appear here.</p>
-          </div>
-        </section>
-      ))}
     </div>
   );
 }

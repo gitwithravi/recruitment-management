@@ -66,6 +66,7 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
           variant="ghost"
           size="sm"
           className="w-fit"
+          nativeButton={false}
           render={<Link href={`/jobs/${id}/candidates`} />}
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -85,6 +86,7 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
+              nativeButton={false}
               render={<Link href={`/jobs/${id}/candidates/${candidate.id}/resume`} />}
             >
               <Download className="size-4" aria-hidden="true" />

@@ -35,7 +35,7 @@ export default async function JobBoardPage({ params }: JobBoardPageProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <Button variant="ghost" size="sm" className="w-fit" render={<Link href={`/jobs/${id}`} />}>
+        <Button variant="ghost" size="sm" className="w-fit" nativeButton={false} render={<Link href={`/jobs/${id}`} />}>
           <ArrowLeft className="size-4" aria-hidden="true" />
           {job.title}
         </Button>

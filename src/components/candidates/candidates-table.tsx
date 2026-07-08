@@ -68,6 +68,7 @@ export function CandidatesTable({ jobId, candidates }: CandidatesTableProps) {
                 <Button
                   variant="ghost"
                   size="sm"
+                  nativeButton={false}
                   render={<Link href={`/jobs/${jobId}/candidates/${candidate.id}`} />}
                 >
                   View
@@ -76,6 +77,7 @@ export function CandidatesTable({ jobId, candidates }: CandidatesTableProps) {
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Download resume for ${candidate.name}`}
+                  nativeButton={false}
                   render={<Link href={`/jobs/${jobId}/candidates/${candidate.id}/resume`} />}
                 >
                   <Download className="size-4" aria-hidden="true" />

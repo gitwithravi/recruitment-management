@@ -84,7 +84,12 @@ export function JobsTable({ jobs, canManageJobs }: JobsTableProps) {
             </TableCell>
             <TableCell className="pr-4 text-right">
               <div className="flex justify-end gap-1">
-                <Button variant="ghost" size="sm" render={<Link href={`/jobs/${job.id}`} />}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  nativeButton={false}
+                  render={<Link href={`/jobs/${job.id}`} />}
+                >
                   View
                 </Button>
                 {canManageJobs ? (
