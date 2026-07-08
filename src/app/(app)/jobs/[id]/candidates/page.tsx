@@ -6,11 +6,9 @@ import { ArrowLeft, Download } from "lucide-react";
 import { AddCandidateButton } from "@/components/candidates/add-candidate-button";
 import { CandidateListExplorer } from "@/components/candidates/candidate-list-explorer";
 import { Button } from "@/components/ui/button";
-import {
-  getCandidateFilterOptions,
-  queryCandidates,
-} from "@/features/candidates/queries";
+import { getCandidateFilterOptions, queryCandidates } from "@/features/candidates/queries";
 import { getJobForUser } from "@/features/jobs/queries";
+import { formatAppTitle } from "@/lib/app-config";
 import { requireJobAccess } from "@/server/auth/session";
 
 type CandidatesPageProps = {
@@ -18,7 +16,7 @@ type CandidatesPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Candidates · Recruitment",
+  title: formatAppTitle("Candidates"),
 };
 
 export default async function CandidatesPage({ params }: CandidatesPageProps) {
@@ -37,7 +35,13 @@ export default async function CandidatesPage({ params }: CandidatesPageProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <Button variant="ghost" size="sm" className="w-fit" nativeButton={false} render={<Link href={`/jobs/${id}`} />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          nativeButton={false}
+          render={<Link href={`/jobs/${id}`} />}
+        >
           <ArrowLeft className="size-4" aria-hidden="true" />
           {job.title}
         </Button>
@@ -50,12 +54,17 @@ export default async function CandidatesPage({ params }: CandidatesPageProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/jobs/${id}/candidates/export`} />}>
-            <Download className="size-4" aria-hidden="true" />
-            Export CSV
-          </Button>
-          <AddCandidateButton jobId={id} />
-        </div>
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link href={`/jobs/${id}/candidates/export`} />}
+            >
+              <Download className="size-4" aria-hidden="true" />
+              Export CSV
+            </Button>
+            <AddCandidateButton jobId={id} />
+          </div>
         </div>
       </div>
 

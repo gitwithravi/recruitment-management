@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCandidateBoardForJob } from "@/features/candidates/queries";
 import { getJobForUser, listAssignableUsersForJob } from "@/features/jobs/queries";
+import { formatAppTitle } from "@/lib/app-config";
 import { cn } from "@/lib/utils";
 import { requireJobAccess } from "@/server/auth/session";
 
@@ -40,7 +41,7 @@ export async function generateMetadata({
   const job = await getJobForUser(user, id);
 
   return {
-    title: job ? `${job.title} · Recruitment` : "Job · Recruitment",
+    title: formatAppTitle(job ? job.title : "Job"),
   };
 }
 
@@ -76,7 +77,13 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <Button variant="ghost" size="sm" className="w-fit" nativeButton={false} render={<Link href="/jobs" />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          nativeButton={false}
+          render={<Link href="/jobs" />}
+        >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Jobs
         </Button>

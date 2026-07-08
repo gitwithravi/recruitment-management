@@ -4,11 +4,12 @@ import { ShieldAlert } from "lucide-react";
 import { AddUserButton } from "@/components/admin/users/add-user-button";
 import { UsersTable } from "@/components/admin/users/users-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatAppTitle } from "@/lib/app-config";
 import { requireAdmin } from "@/server/auth/session";
 import { listUsersForAdmin } from "@/features/users/queries";
 
 export const metadata: Metadata = {
-  title: "Users · Recruitment",
+  title: formatAppTitle("Users"),
 };
 
 export default async function AdminUsersPage() {

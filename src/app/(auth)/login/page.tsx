@@ -3,6 +3,7 @@ import { ArrowUpRight, KanbanSquare, ShieldCheck, UsersRound } from "lucide-reac
 
 import { LoginForm } from "@/components/auth/login-form";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { APP_NAME } from "@/lib/app-config";
 import { getCurrentUser } from "@/server/auth/session";
 
 const highlights = [
@@ -49,7 +50,7 @@ export default async function LoginPage() {
         />
         <div className="relative flex items-center gap-2 text-lg font-semibold tracking-tight">
           <KanbanSquare className="size-6" aria-hidden="true" />
-          <span>Recruitment</span>
+          <span>{APP_NAME}</span>
         </div>
 
         <div className="relative space-y-6">
@@ -85,7 +86,7 @@ export default async function LoginPage() {
         </div>
 
         <p className="relative text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} Recruitment. Internal use only.
+          © {new Date().getFullYear()} {APP_NAME}. Internal use only.
         </p>
       </section>
 
@@ -95,7 +96,7 @@ export default async function LoginPage() {
             <div className="mx-auto inline-flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <KanbanSquare className="size-6" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight">Recruitment</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{APP_NAME}</h1>
             <p className="text-sm text-muted-foreground">Sign in with your internal account.</p>
           </div>
 

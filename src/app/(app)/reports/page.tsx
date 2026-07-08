@@ -22,6 +22,7 @@ import {
   reportKinds,
   type ReportKind,
 } from "@/features/reports/queries";
+import { formatAppTitle } from "@/lib/app-config";
 import { requireUser } from "@/server/auth/session";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +31,7 @@ type ReportsPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Reports · Recruitment",
+  title: formatAppTitle("Reports"),
 };
 
 const ALL_JOBS = "all";
@@ -109,7 +110,9 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
                 size="sm"
                 nativeButton={false}
                 render={
-                  <Link href={`/reports/${reportKind}/export?jobId=${encodeURIComponent(selectedJobId)}`} />
+                  <Link
+                    href={`/reports/${reportKind}/export?jobId=${encodeURIComponent(selectedJobId)}`}
+                  />
                 }
               >
                 <Download className="size-4" aria-hidden="true" />
@@ -119,11 +122,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
           </div>
         </CardHeader>
         <CardContent className="px-0">
-          <ReportBody
-            user={user}
-            reportKind={reportKind}
-            selectedJobId={selectedJobId}
-          />
+          <ReportBody user={user} reportKind={reportKind} selectedJobId={selectedJobId} />
         </CardContent>
       </Card>
     </div>
@@ -179,11 +178,7 @@ async function ReportBody({
     return (
       <ReportTable
         headers={["Job", "Stage", "Candidates"]}
-        rows={rows.map((row) => [
-          row.job.title,
-          row.stage.name,
-          String(row.candidateCount),
-        ])}
+        rows={rows.map((row) => [row.job.title, row.stage.name, String(row.candidateCount)])}
         empty="No stages with candidates yet."
       />
     );

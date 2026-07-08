@@ -25,7 +25,7 @@ POSTGRES_USER=recruitment
 POSTGRES_PASSWORD=replace-with-a-strong-database-password
 
 AUTH_SECRET=replace-with-at-least-32-random-characters
-NEXT_PUBLIC_APP_NAME=Recruitment
+APP_NAME=Recruitment
 ENABLE_USER_CSV_EXPORT=false
 
 SMTP_HOST=smtp.example.com

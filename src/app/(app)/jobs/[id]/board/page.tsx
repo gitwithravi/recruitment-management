@@ -7,6 +7,7 @@ import { CandidateBoard } from "@/components/candidates/candidate-board";
 import { Button } from "@/components/ui/button";
 import { getCandidateBoardForJob } from "@/features/candidates/queries";
 import { getJobForUser } from "@/features/jobs/queries";
+import { formatAppTitle } from "@/lib/app-config";
 import { requireJobAccess } from "@/server/auth/session";
 
 type JobBoardPageProps = {
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: JobBoardPageProps): Promise<M
   const job = await getJobForUser(user, id);
 
   return {
-    title: job ? `${job.title} Board · Recruitment` : "Job Board · Recruitment",
+    title: formatAppTitle(job ? `${job.title} Board` : "Job Board"),
   };
 }
 
@@ -35,7 +36,13 @@ export default async function JobBoardPage({ params }: JobBoardPageProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <Button variant="ghost" size="sm" className="w-fit" nativeButton={false} render={<Link href={`/jobs/${id}`} />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          nativeButton={false}
+          render={<Link href={`/jobs/${id}`} />}
+        >
           <ArrowLeft className="size-4" aria-hidden="true" />
           {job.title}
         </Button>

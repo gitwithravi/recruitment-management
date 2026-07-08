@@ -17,6 +17,7 @@ import { listCommentsForCandidate, listMentionableUsersForJob } from "@/features
 import { getJobForUser } from "@/features/jobs/queries";
 import { getOfferForCandidate } from "@/features/offers/queries";
 import { canViewOfferDetails } from "@/features/offers/rules";
+import { formatAppTitle } from "@/lib/app-config";
 import { requireJobAccess } from "@/server/auth/session";
 
 type CandidateDetailPageProps = {
@@ -33,7 +34,7 @@ export async function generateMetadata({
   const candidate = await getCandidateForJob(user, id, candidateId);
 
   return {
-    title: candidate ? `${candidate.name} · Recruitment` : "Candidate · Recruitment",
+    title: formatAppTitle(candidate ? candidate.name : "Candidate"),
   };
 }
 

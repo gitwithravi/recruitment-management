@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
+import { APP_NAME } from "@/lib/app-config";
 import { sendEmail } from "@/server/notifications/email";
 
 type Tx = PrismaClient | Prisma.TransactionClient;
@@ -47,11 +48,7 @@ async function createInAppNotification(
   });
 }
 
-async function sendNotificationEmail(input: {
-  to: string;
-  subject: string;
-  body: string;
-}) {
+async function sendNotificationEmail(input: { to: string; subject: string; body: string }) {
   try {
     return await sendEmail(input);
   } catch {
@@ -84,14 +81,14 @@ export async function dispatchAssignmentNotification(
     input.comment ? `Comment from ${input.actorName}:` : null,
     input.comment ? input.comment : null,
     ``,
-    `You can view this candidate in the recruitment management system.`,
+    `You can view this candidate in ${APP_NAME}.`,
   ]
     .filter((line): line is string => line !== null)
     .join("\n");
 
   await sendNotificationEmail({
     to: input.recipientEmail,
-    subject: `[Recruitment] ${input.actorName} assigned ${input.candidateName} to you`,
+    subject: `[${APP_NAME}] ${input.actorName} assigned ${input.candidateName} to you`,
     body: emailBody,
   });
 }
@@ -123,12 +120,12 @@ export async function dispatchMentionNotification(
     ``,
     `"${excerpt}"`,
     ``,
-    `You can view this candidate in the recruitment management system.`,
+    `You can view this candidate in ${APP_NAME}.`,
   ].join("\n");
 
   await sendNotificationEmail({
     to: input.recipientEmail,
-    subject: `[Recruitment] ${input.actorName} mentioned you in a comment`,
+    subject: `[${APP_NAME}] ${input.actorName} mentioned you in a comment`,
     body: emailBody,
   });
 }

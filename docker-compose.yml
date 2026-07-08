@@ -15,7 +15,8 @@ services:
       HOSTNAME: 0.0.0.0
       DATABASE_URL: postgresql://${POSTGRES_USER:-recruitment}:${POSTGRES_PASSWORD:-recruitment_password}@postgres:5432/${POSTGRES_DB:-recruitment}?schema=public
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in your deployment environment}
-      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Recruitment}
+      APP_NAME: ${APP_NAME:-}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}

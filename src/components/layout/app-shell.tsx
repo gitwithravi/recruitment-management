@@ -17,11 +17,13 @@ import type { NotificationItem } from "@/features/notifications/queries";
 const SIDEBAR_WIDTH = "15rem";
 
 export function AppShell({
+  appName,
   children,
   user,
   initialNotifications,
   initialUnreadCount,
 }: {
+  appName: string;
   children: React.ReactNode;
   user: CurrentUser;
   initialNotifications: NotificationItem[];
@@ -78,7 +80,7 @@ export function AppShell({
             <span className="inline-flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BriefcaseBusiness className="size-4" aria-hidden="true" />
             </span>
-            <span>Recruitment</span>
+            <span>{appName}</span>
           </Link>
           <div className="ml-auto flex items-center gap-1">
             <ThemeToggle />
