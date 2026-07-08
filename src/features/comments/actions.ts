@@ -5,10 +5,16 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/db/client";
+import {
+  parseMentions,
+  buildMentionReplacements,
+  getMentionNotificationRecipientIds,
+} from "@/features/comments/mentions";
 import { writeAuditLog, writeCandidateHistory } from "@/server/audit";
 import { dispatchMentionNotification } from "@/server/notifications/dispatch";
 import { getCurrentUser, requireJobAccess } from "@/server/auth/session";
 import { saveAttachmentFile } from "@/server/storage";
+import { validateAttachmentFile } from "@/server/upload-validation";
 
 export type CommentFormState = {
   error?: string;
@@ -19,45 +25,25 @@ export type AttachmentUploadState = {
   error?: string;
 };
 
-function parseMentions(
-  body: string,
-  validUsernames: Map<string, string>,
-): string[] {
-  const mentioned = new Set<string>();
-  const regex = /@([a-zA-Z0-9_-]+)/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(body)) !== null) {
-    const username = match[1].toLowerCase();
-    const userId = validUsernames.get(username);
-
-    if (userId) {
-      mentioned.add(userId);
-    }
+async function userCanAccessJob(
+  user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>,
+  jobId: string,
+) {
+  if (user.role === "admin") {
+    return true;
   }
 
-  return [...mentioned];
-}
+  const membership = await prisma.jobUser.findUnique({
+    where: {
+      jobId_userId: {
+        jobId,
+        userId: user.id,
+      },
+    },
+    select: { id: true },
+  });
 
-function buildMentionReplacements(
-  body: string,
-  mentionedUserIds: string[],
-  userMap: Map<string, { username: string }>,
-): string {
-  let result = body;
-  for (const userId of mentionedUserIds) {
-    const user = userMap.get(userId);
-
-    if (user) {
-      const regex = new RegExp(
-        `@${user.username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
-        "gi",
-      );
-      result = result.replace(regex, `@${user.username}`);
-    }
-  }
-
-  return result;
+  return Boolean(membership);
 }
 
 export async function createCommentAction(
@@ -68,9 +54,7 @@ export async function createCommentAction(
 ): Promise<CommentFormState> {
   const user = await requireJobAccess(jobId);
   const body = String(formData.get("body") ?? "").trim();
-  const visibility = String(formData.get("visibility") ?? "job") as
-    | "job"
-    | "admin";
+  const visibility = String(formData.get("visibility") ?? "job") as "job" | "admin";
 
   if (!body) {
     return { error: "Comment body is required." };
@@ -116,15 +100,12 @@ export async function createCommentAction(
       userMap.set(ju.user.id, { username: ju.user.username, email: ju.user.email });
     }
 
-    const mentionedUserIds = parseMentions(body, validUsernames).filter(
-      (id) => id !== user.id,
+    const mentionedUserIds = getMentionNotificationRecipientIds(
+      parseMentions(body, validUsernames),
+      user.id,
     );
 
-    const normalizedBody = buildMentionReplacements(
-      body,
-      mentionedUserIds,
-      userMap,
-    );
+    const normalizedBody = buildMentionReplacements(body, mentionedUserIds, userMap);
 
     await prisma.$transaction(async (tx) => {
       await tx.candidateComment.create({
@@ -251,6 +232,10 @@ export async function updateCommentAction(
       return { error: "You can only edit your own comments." };
     }
 
+    if (!(await userCanAccessJob(user, comment.candidate.jobId))) {
+      return { error: "You no longer have access to this job." };
+    }
+
     const jobUsers = await prisma.jobUser.findMany({
       where: { jobId: comment.candidate.jobId },
       select: {
@@ -266,15 +251,12 @@ export async function updateCommentAction(
       userMap.set(ju.user.id, { username: ju.user.username, email: ju.user.email });
     }
 
-    const mentionedUserIds = parseMentions(body, validUsernames).filter(
-      (id) => id !== user.id,
+    const mentionedUserIds = getMentionNotificationRecipientIds(
+      parseMentions(body, validUsernames),
+      user.id,
     );
 
-    const normalizedBody = buildMentionReplacements(
-      body,
-      mentionedUserIds,
-      userMap,
-    );
+    const normalizedBody = buildMentionReplacements(body, mentionedUserIds, userMap);
 
     await prisma.$transaction(async (tx) => {
       await tx.commentMention.deleteMany({ where: { commentId } });
@@ -350,9 +332,7 @@ export async function updateCommentAction(
       });
     });
 
-    revalidatePath(
-      `/jobs/${comment.candidate.jobId}/candidates/${comment.candidateId}`,
-    );
+    revalidatePath(`/jobs/${comment.candidate.jobId}/candidates/${comment.candidateId}`);
     return {};
   } catch (error) {
     console.error("updateCommentAction failed", error);
@@ -360,9 +340,7 @@ export async function updateCommentAction(
   }
 }
 
-export async function deleteCommentAction(
-  commentId: string,
-): Promise<CommentFormState> {
+export async function deleteCommentAction(commentId: string): Promise<CommentFormState> {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -388,6 +366,10 @@ export async function deleteCommentAction(
       return { error: "Only the author or an admin can delete this comment." };
     }
 
+    if (!(await userCanAccessJob(user, comment.candidate.jobId))) {
+      return { error: "You no longer have access to this job." };
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.candidateComment.update({
         where: { id: commentId },
@@ -407,17 +389,13 @@ export async function deleteCommentAction(
       });
     });
 
-    revalidatePath(
-      `/jobs/${comment.candidate.jobId}/candidates/${comment.candidateId}`,
-    );
+    revalidatePath(`/jobs/${comment.candidate.jobId}/candidates/${comment.candidateId}`);
     return {};
   } catch (error) {
     console.error("deleteCommentAction failed", error);
     return { error: "Could not delete the comment. Please try again." };
   }
 }
-
-const ATTACHMENT_MAX_SIZE = 25 * 1024 * 1024;
 
 function getAttachmentFromForm(formData: FormData) {
   const file = formData.get("file");
@@ -441,8 +419,10 @@ export async function uploadAttachmentAction(
     return { error: "Select a file to upload." };
   }
 
-  if (file.size > ATTACHMENT_MAX_SIZE) {
-    return { error: "File must be 25 MB or smaller." };
+  const fileError = validateAttachmentFile(file, { required: true });
+
+  if (fileError) {
+    return { error: fileError };
   }
 
   try {
@@ -464,6 +444,10 @@ export async function uploadAttachmentAction(
       return { error: "You can only attach files to your own comments." };
     }
 
+    if (!(await userCanAccessJob(user, comment.candidate.jobId))) {
+      return { error: "You no longer have access to this job." };
+    }
+
     const saved = await saveAttachmentFile({
       jobId: comment.candidate.jobId,
       commentId: comment.id,
@@ -483,9 +467,7 @@ export async function uploadAttachmentAction(
       });
     });
 
-    revalidatePath(
-      `/jobs/${comment.candidate.jobId}/candidates/${comment.candidateId}`,
-    );
+    revalidatePath(`/jobs/${comment.candidate.jobId}/candidates/${comment.candidateId}`);
     return {};
   } catch (error) {
     console.error("uploadAttachmentAction failed", error);

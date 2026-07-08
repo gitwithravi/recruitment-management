@@ -1,11 +1,9 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
+import { assertStageDeleteAllowed } from "@/features/jobs/rules";
 
 type Tx = PrismaClient | Prisma.TransactionClient;
 
-export async function assertStageBelongsToJob(
-  tx: Tx,
-  input: { jobId: string; stageId: string },
-) {
+export async function assertStageBelongsToJob(tx: Tx, input: { jobId: string; stageId: string }) {
   const stage = await tx.jobStage.findFirst({
     where: {
       id: input.stageId,
@@ -19,10 +17,7 @@ export async function assertStageBelongsToJob(
   }
 }
 
-export async function assertUserAttachedToJob(
-  tx: Tx,
-  input: { jobId: string; userId: string },
-) {
+export async function assertUserAttachedToJob(tx: Tx, input: { jobId: string; userId: string }) {
   const jobUser = await tx.jobUser.findUnique({
     where: {
       jobId_userId: {
@@ -57,7 +52,5 @@ export async function assertStageCanBeDeleted(tx: Tx, stageId: string) {
     where: { currentStageId: stageId },
   });
 
-  if (candidateCount > 0) {
-    throw new Error("Stage cannot be deleted while candidates exist in it.");
-  }
+  assertStageDeleteAllowed(candidateCount);
 }

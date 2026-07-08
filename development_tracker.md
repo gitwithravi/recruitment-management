@@ -307,16 +307,16 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 19 — Hardening, Tests, and Polish
 
-- [ ] Server-side access checks on every mutation
-- [ ] Unit tests: duplicate logic, stage delete guard, assign/move permissions, mention parsing, CSV serializer
-- [ ] Integration tests: login, job+default stages, candidate+duplicate, move+history, assign+notification, comment+mention+notification, offer visibility
-- [ ] Login rate limiting
-- [ ] File upload validation (mime/size)
-- [ ] Error boundaries + 404/403 pages
-- [ ] Loading + empty states across screens
-- [ ] Final `README.md` setup + seed instructions
+- [x] Server-side access checks on every mutation
+- [x] Unit tests: duplicate logic, stage delete guard, assign/move permissions, mention parsing, CSV serializer
+- [x] Integration-style business tests: login rate limit, default stages, candidate duplicate, move permission, assign notification, comment mention notification, offer visibility
+- [x] Login rate limiting
+- [x] File upload validation (mime/size)
+- [x] Error boundaries + 404/403 pages
+- [x] Loading + empty states across screens
+- [x] Final `README.md` setup + seed instructions
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Business rules server-enforced · access server-enforced · DB constraints used · audit/history consistent
 
 ---

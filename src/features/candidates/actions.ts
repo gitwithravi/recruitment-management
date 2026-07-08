@@ -11,6 +11,12 @@ import { dispatchAssignmentNotification } from "@/server/notifications/dispatch"
 import { requireJobAccess } from "@/server/auth/session";
 import { deleteStoredFile, saveResumeFile } from "@/server/storage";
 import {
+  canManageCandidateAssignment,
+  canMoveCandidate,
+  findCandidateDuplicate,
+  shouldDispatchAssignmentNotification,
+} from "@/features/candidates/rules";
+import {
   validateCandidateFields,
   validateResumeFile,
   type CandidateFieldErrors,
@@ -109,11 +115,17 @@ export async function createCandidateAction(
         select: { email: true, phone: true },
       });
 
-      if (existing?.email === input.email) {
+      const duplicate = findCandidateDuplicate({
+        existing,
+        email: input.email,
+        phone: input.phone,
+      });
+
+      if (duplicate === "email") {
         throw new Error("DUPLICATE_EMAIL");
       }
 
-      if (existing?.phone === input.phone) {
+      if (duplicate === "phone") {
         throw new Error("DUPLICATE_PHONE");
       }
 
@@ -239,11 +251,17 @@ export async function updateCandidateAction(
         select: { email: true, phone: true },
       });
 
-      if (duplicate?.email === input.email) {
+      const duplicateField = findCandidateDuplicate({
+        existing: duplicate,
+        email: input.email,
+        phone: input.phone,
+      });
+
+      if (duplicateField === "email") {
         throw new Error("DUPLICATE_EMAIL");
       }
 
-      if (duplicate?.phone === input.phone) {
+      if (duplicateField === "phone") {
         throw new Error("DUPLICATE_PHONE");
       }
 
@@ -419,7 +437,13 @@ export async function moveCandidateAction(
         throw new Error("CANDIDATE_NOT_FOUND");
       }
 
-      if (user.role !== "admin" && candidate.assignedUserId !== user.id) {
+      if (
+        !canMoveCandidate({
+          userRole: user.role,
+          userId: user.id,
+          assignedUserId: candidate.assignedUserId,
+        })
+      ) {
         throw new Error("MOVE_NOT_ALLOWED");
       }
 
@@ -544,7 +568,13 @@ export async function assignCandidateAction(
         throw new Error("CANDIDATE_NOT_FOUND");
       }
 
-      if (user.role !== "admin" && candidate.assignedUserId !== user.id) {
+      if (
+        !canManageCandidateAssignment({
+          userRole: user.role,
+          userId: user.id,
+          assignedUserId: candidate.assignedUserId,
+        })
+      ) {
         throw new Error("ASSIGN_NOT_ALLOWED");
       }
 
@@ -599,7 +629,13 @@ export async function assignCandidateAction(
       });
 
       let notificationId: string | null = null;
-      if (newAssignee && newAssignee.id !== user.id) {
+      if (
+        newAssignee &&
+        shouldDispatchAssignmentNotification({
+          actorUserId: user.id,
+          newAssigneeId: newAssignee.id,
+        })
+      ) {
         await dispatchAssignmentNotification(tx, {
           recipientUserId: newAssignee.id,
           recipientEmail: newAssignee.email,

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { forbidden } from "next/navigation";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/db/client";
@@ -100,7 +101,7 @@ export async function requireAdmin() {
   const user = await requireUser();
 
   if (user.role !== "admin") {
-    redirect("/");
+    forbidden();
   }
 
   return user;
@@ -124,7 +125,7 @@ export async function requireJobAccess(jobId: string) {
   });
 
   if (!membership) {
-    redirect("/");
+    forbidden();
   }
 
   return user;

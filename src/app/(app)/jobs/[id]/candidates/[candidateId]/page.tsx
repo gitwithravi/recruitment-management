@@ -12,13 +12,11 @@ import { OfferDetailsPanel } from "@/components/offers/offer-details-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  getCandidateForJob,
-  listCandidateHistoryTimeline,
-} from "@/features/candidates/queries";
+import { getCandidateForJob, listCandidateHistoryTimeline } from "@/features/candidates/queries";
 import { listCommentsForCandidate, listMentionableUsersForJob } from "@/features/comments/queries";
 import { getJobForUser } from "@/features/jobs/queries";
 import { getOfferForCandidate } from "@/features/offers/queries";
+import { canViewOfferDetails } from "@/features/offers/rules";
 import { requireJobAccess } from "@/server/auth/session";
 
 type CandidateDetailPageProps = {
@@ -42,15 +40,14 @@ export async function generateMetadata({
 export default async function CandidateDetailPage({ params }: CandidateDetailPageProps) {
   const { id, candidateId } = await params;
   const user = await requireJobAccess(id);
-  const [job, candidate, historyTimeline, comments, mentionableUsers, offer] =
-    await Promise.all([
-      getJobForUser(user, id),
-      getCandidateForJob(user, id, candidateId),
-      listCandidateHistoryTimeline(user, id, candidateId),
-      listCommentsForCandidate(user, candidateId),
-      listMentionableUsersForJob(id),
-      user.role === "admin" ? getOfferForCandidate(candidateId) : null,
-    ]);
+  const [job, candidate, historyTimeline, comments, mentionableUsers, offer] = await Promise.all([
+    getJobForUser(user, id),
+    getCandidateForJob(user, id, candidateId),
+    listCandidateHistoryTimeline(user, id, candidateId),
+    listCommentsForCandidate(user, candidateId),
+    listMentionableUsersForJob(id),
+    canViewOfferDetails(user.role) ? getOfferForCandidate(candidateId) : null,
+  ]);
 
   if (!job || !candidate) {
     notFound();
