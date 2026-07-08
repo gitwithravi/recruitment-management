@@ -9,6 +9,7 @@ import { CommentThread } from "@/components/candidates/comment-thread";
 import { EditCandidateButton } from "@/components/candidates/edit-candidate-button";
 import { CandidateStageTimeline } from "@/components/candidates/candidate-stage-timeline";
 import { ResumeReplaceForm } from "@/components/candidates/resume-replace-form";
+import { OfferDetailsPanel } from "@/components/offers/offer-details-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import {
 } from "@/features/candidates/queries";
 import { listCommentsForCandidate, listMentionableUsersForJob } from "@/features/comments/queries";
 import { getJobForUser } from "@/features/jobs/queries";
+import { getOfferForCandidate } from "@/features/offers/queries";
 import { requireJobAccess } from "@/server/auth/session";
 
 type CandidateDetailPageProps = {
@@ -42,7 +44,7 @@ export async function generateMetadata({
 export default async function CandidateDetailPage({ params }: CandidateDetailPageProps) {
   const { id, candidateId } = await params;
   const user = await requireJobAccess(id);
-  const [job, candidate, stageTimeline, assignmentTimeline, comments, mentionableUsers] =
+  const [job, candidate, stageTimeline, assignmentTimeline, comments, mentionableUsers, offer] =
     await Promise.all([
       getJobForUser(user, id),
       getCandidateForJob(user, id, candidateId),
@@ -50,6 +52,7 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
       listCandidateAssignmentTimeline(id, candidateId),
       listCommentsForCandidate(user, candidateId),
       listMentionableUsersForJob(id),
+      user.role === "admin" ? getOfferForCandidate(candidateId) : null,
     ]);
 
   if (!job || !candidate) {
@@ -141,6 +144,20 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
               <ResumeReplaceForm jobId={id} candidateId={candidate.id} />
             </CardContent>
           </Card>
+
+          {user.role === "admin" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Offer details</CardTitle>
+                <CardDescription>
+                  Admin-only. Offer CTC, dates, and status for this candidate.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <OfferDetailsPanel candidateId={candidate.id} initialOffer={offer ?? null} />
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       </div>
 

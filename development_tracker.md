@@ -210,13 +210,13 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 12 — Offer Details (Admin)
 
-- [ ] `GET /jobs/[id]/candidates/[candidateId]/offer` (Admin only)
-- [ ] `PUT .../offer` (upsert)
-- [ ] Offer panel in candidate detail (server-gated)
-- [ ] Offer status enum (Not Offered / Offered / Accepted / Rejected / Joined)
-- [ ] Audit log on offer create/update
+- [x] `GET /jobs/[id]/candidates/[candidateId]/offer` (Admin only)
+- [x] `PUT .../offer` (upsert)
+- [x] Offer panel in candidate detail (server-gated)
+- [x] Offer status enum (Not Offered / Offered / Accepted / Rejected / Joined)
+- [x] Audit log on offer create/update
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Admin adds/updates offer · users cannot see or edit (server-enforced) · offer persists across stage changes
 
 ---
@@ -337,7 +337,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 9 — Stage Move       | Done        |       |
 | 10 — Assignment      | Not started |       |
 | 11 — Comments        | Done        |       |
-| 12 — Offers          | Not started |       |
+| 12 — Offers          | Done        |       |
 | 13 — Notifications   | Done        |       |
 | 14 — Search/Filters  | Not started |       |
 | 15 — Reports         | Not started |       |
