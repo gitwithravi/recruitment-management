@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 
 import { AddCandidateButton } from "@/components/candidates/add-candidate-button";
 import { CandidateListExplorer } from "@/components/candidates/candidate-list-explorer";
@@ -49,7 +49,13 @@ export default async function CandidatesPage({ params }: CandidatesPageProps) {
               Add and manage resumes for this job. Duplicate email or phone is blocked per job.
             </p>
           </div>
+          <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/jobs/${id}/candidates/export`} />}>
+            <Download className="size-4" aria-hidden="true" />
+            Export CSV
+          </Button>
           <AddCandidateButton jobId={id} />
+        </div>
         </div>
       </div>
 

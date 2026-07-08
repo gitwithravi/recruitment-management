@@ -258,7 +258,7 @@ Legend at the bottom maps statuses to a quick health summary.
 - [x] `GET /reports/aging` (days in current stage)
 - [x] Reports screen with job selector + relevant filters
 - [x] Admin sees all jobs; users see attached jobs only
-- [ ] Each report supports CSV export (Phase 16)
+- [x] Each report supports CSV export (Phase 16)
 
 **Phase status:** Done
 **Acceptance check:** Admin sees all four reports · data respects job access
@@ -267,14 +267,14 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 16 — CSV Export
 
-- [ ] Shared CSV serializer (proper escaping)
-- [ ] `GET /jobs/[id]/candidates/export` (with active filters)
-- [ ] `GET /reports/[report]/export`
-- [ ] Streamed `text/csv` response with `Content-Disposition: attachment`
-- [ ] Job-access enforced
-- [ ] `ENABLE_USER_CSV_EXPORT` env toggle for user export
+- [x] Shared CSV serializer (quoted fields, proper escaping, UTF-8 BOM)
+- [x] `GET /jobs/[id]/candidates/export` (respects active filters)
+- [x] `GET /reports/[report]/export`
+- [x] Streamed `text/csv` response with `Content-Disposition: attachment`
+- [x] Job-access enforced (`requireJobAccess` / `assertReportJobAccess`)
+- [x] `ENABLE_USER_CSV_EXPORT` env toggle for user export
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Admin exports lists + reports · export respects filters · users can't export unattached jobs
 
 ---
@@ -341,12 +341,12 @@ Legend at the bottom maps statuses to a quick health summary.
 | 13 — Notifications   | Done        |       |
 | 14 — Search/Filters  | Done        |       |
 | 15 — Reports         | Done        |       |
-| 16 — CSV Export      | Not started |       |
+| 16 — CSV Export      | Done        |       |
 | 17 — Audit/History   | Not started |       |
 | 18 — Dashboard       | Not started |       |
 | 19 — Hardening/Tests | Not started |       |
 
-**Last updated:** Phase 15 complete
+**Last updated:** Phase 16 complete
 **Blockers / notes:** —
 
 ---

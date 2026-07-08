@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Download } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,7 +102,20 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
                 {reportKinds.find((kind) => kind.value === reportKind)?.description}
               </CardDescription>
             </div>
-            <JobSelector jobs={jobs} selectedJobId={selectedJobId} reportKind={reportKind} />
+            <div className="flex items-center gap-2">
+              <JobSelector jobs={jobs} selectedJobId={selectedJobId} reportKind={reportKind} />
+              <Button
+                variant="outline"
+                size="sm"
+                nativeButton={false}
+                render={
+                  <Link href={`/reports/${reportKind}/export?jobId=${encodeURIComponent(selectedJobId)}`} />
+                }
+              >
+                <Download className="size-4" aria-hidden="true" />
+                Export CSV
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="px-0">

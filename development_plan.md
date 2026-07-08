@@ -441,7 +441,7 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 - [x] `GET /reports/aging` — days in current stage per candidate.
 - [x] Reports screen with job selector and date/source filters where relevant.
 - [x] Admin sees all jobs; users see only attached jobs (when exposed).
-- [ ] Each report reuses the CSV export helper.
+- [x] Each report reuses the CSV export helper.
 
 ### Acceptance Criteria (req 13)
 
@@ -458,12 +458,12 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] Shared CSV serializer (quoted fields, proper escaping, UTF-8 BOM optional).
-- [ ] `GET /jobs/[id]/candidates/export` — export candidate list with active filters.
-- [ ] `GET /reports/[report]/export` — export a report.
-- [ ] Stream the response with `Content-Type: text/csv` and `Content-Disposition: attachment`.
-- [ ] Enforce job access; users export only from attached jobs (if enabled).
-- [ ] Config flag `ENABLE_USER_CSV_EXPORT` (env) to toggle user export access per req 14.2.
+- [x] Shared CSV serializer (quoted fields, proper escaping, UTF-8 BOM optional).
+- [x] `GET /jobs/[id]/candidates/export` — export candidate list with active filters.
+- [x] `GET /reports/[report]/export` — export a report.
+- [x] Stream the response with `Content-Type: text/csv` and `Content-Disposition: attachment`.
+- [x] Enforce job access; users export only from attached jobs (if enabled).
+- [x] Config flag `ENABLE_USER_CSV_EXPORT` (env) to toggle user export access per req 14.2.
 
 ### Acceptance Criteria (req 14)
 
