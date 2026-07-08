@@ -149,17 +149,17 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 8 — Kanban Board UI
 
-- [ ] `GET /jobs/[id]/board`
-- [ ] Card component (fields per req 19.3)
-- [ ] Drag-and-drop via `@dnd-kit`
-- [ ] Drop opens movement modal (Phase 9)
-- [ ] Filter bar (stage, assignee, source, city, experience range, notice period)
-- [ ] Search input (name/email/phone, debounced)
-- [ ] Live updates without full reload
-- [ ] Loading + empty states
-- [ ] Assigned user visual indicator on cards
+- [x] `GET /jobs/[id]/board`
+- [x] Card component (fields per req 19.3)
+- [x] Drag-and-drop via `@dnd-kit`
+- [x] Drop opens movement modal (Phase 9)
+- [x] Filter bar (stage, assignee, source, city, experience range, notice period)
+- [x] Search input (name/email/phone, debounced)
+- [x] Live updates without full reload
+- [x] Loading + empty states
+- [x] Assigned user visual indicator on cards
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** One board per job · ordered columns · required card fields · drag opens modal · filters combine · search works
 
 ---
@@ -333,7 +333,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 5 — Job Users        | Done        |       |
 | 6 — Stages           | Done        |       |
 | 7 — Candidates       | Done        |       |
-| 8 — Board UI         | Not started |       |
+| 8 — Board UI         | Done        |       |
 | 9 — Stage Move       | Not started |       |
 | 10 — Assignment      | Not started |       |
 | 11 — Comments        | Not started |       |

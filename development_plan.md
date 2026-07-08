@@ -244,15 +244,15 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] `GET /jobs/[id]/board` — board view with stages as columns and candidate cards.
-- [ ] Card component showing the fields from req 19.3.
-- [ ] Drag-and-drop across columns using `@dnd-kit`.
-- [ ] On drop, open a movement modal (Phase 9) instead of committing immediately.
-- [ ] Filter bar: stage, assigned user, source, current city, experience range, notice period.
-- [ ] Search input (name/email/phone) with debounce.
-- [ ] Filters and search update results without full page reload (client state + server fetch).
-- [ ] Empty state and loading skeletons.
-- [ ] Visual indicator of the assigned user on each card.
+- [x] `GET /jobs/[id]/board` — board view with stages as columns and candidate cards.
+- [x] Card component showing the fields from req 19.3.
+- [x] Drag-and-drop across columns using `@dnd-kit`.
+- [x] On drop, open a movement modal (Phase 9) instead of committing immediately.
+- [x] Filter bar: stage, assigned user, source, current city, experience range, notice period.
+- [x] Search input (name/email/phone) with debounce.
+- [x] Filters and search update results without full page reload (client state + server fetch).
+- [x] Empty state and loading skeletons.
+- [x] Visual indicator of the assigned user on each card.
 
 ### Acceptance Criteria (req 7.1, 12, 19.2)
 

@@ -46,6 +46,43 @@ export type CandidateDetail = CandidateListItem & {
   canEditFeedback: boolean;
 };
 
+export type BoardCandidate = {
+  id: string;
+  jobId: string;
+  name: string;
+  email: string;
+  phone: string;
+  totalExperience: string;
+  relevantExperience: string;
+  currentCity: string;
+  noticePeriod: string;
+  source: string;
+  updatedAt: Date;
+  currentStageId: string;
+  assignedUser: {
+    id: string;
+    name: string;
+    username: string;
+  } | null;
+};
+
+export type BoardStage = {
+  id: string;
+  name: string;
+  position: number;
+};
+
+export type BoardFilters = {
+  assignedUsers: {
+    id: string;
+    name: string;
+    username: string;
+  }[];
+  sources: string[];
+  cities: string[];
+  noticePeriods: string[];
+};
+
 function decimalToString(value: { toString(): string } | null) {
   return value ? value.toString() : null;
 }
@@ -210,5 +247,88 @@ export async function getCandidateForJob(
     resumeFilePath: candidate.resumeFilePath,
     createdBy: candidate.createdBy,
     canEditFeedback: user.role === "admin" || candidate.assignedUser?.id === user.id,
+  };
+}
+
+export async function getCandidateBoardForJob(jobId: string): Promise<{
+  stages: BoardStage[];
+  candidates: BoardCandidate[];
+  filters: BoardFilters;
+}> {
+  const [stages, candidates, assignedUsers] = await Promise.all([
+    prisma.jobStage.findMany({
+      where: { jobId },
+      orderBy: { position: "asc" },
+      select: {
+        id: true,
+        name: true,
+        position: true,
+      },
+    }),
+    prisma.candidate.findMany({
+      where: { jobId },
+      orderBy: [{ updatedAt: "desc" }],
+      select: {
+        id: true,
+        jobId: true,
+        name: true,
+        email: true,
+        phone: true,
+        totalExperience: true,
+        relevantExperience: true,
+        currentCity: true,
+        noticePeriod: true,
+        source: true,
+        updatedAt: true,
+        currentStageId: true,
+        assignedUser: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+      },
+    }),
+    prisma.user.findMany({
+      where: {
+        OR: [{ assignedCandidates: { some: { jobId } } }, { jobMemberships: { some: { jobId } } }],
+      },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+      },
+    }),
+  ]);
+
+  const boardCandidates = candidates.map((candidate) => ({
+    id: candidate.id,
+    jobId: candidate.jobId,
+    name: candidate.name,
+    email: candidate.email,
+    phone: candidate.phone,
+    totalExperience: candidate.totalExperience.toString(),
+    relevantExperience: candidate.relevantExperience.toString(),
+    currentCity: candidate.currentCity,
+    noticePeriod: candidate.noticePeriod,
+    source: candidate.source,
+    updatedAt: candidate.updatedAt,
+    currentStageId: candidate.currentStageId,
+    assignedUser: candidate.assignedUser,
+  }));
+
+  return {
+    stages,
+    candidates: boardCandidates,
+    filters: {
+      assignedUsers,
+      sources: [...new Set(boardCandidates.map((candidate) => candidate.source))].sort(),
+      cities: [...new Set(boardCandidates.map((candidate) => candidate.currentCity))].sort(),
+      noticePeriods: [
+        ...new Set(boardCandidates.map((candidate) => candidate.noticePeriod)),
+      ].sort(),
+    },
   };
 }

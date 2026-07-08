@@ -111,7 +111,7 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
                 key={tab.value}
                 href={
                   tab.value === "board"
-                    ? `/jobs/${job.id}`
+                    ? `/jobs/${job.id}/board`
                     : tab.value === "candidates"
                       ? `/jobs/${job.id}/candidates`
                       : `/jobs/${job.id}?tab=${tab.value}`
