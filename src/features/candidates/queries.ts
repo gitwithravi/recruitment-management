@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/db/client";
+import type { AuditAction } from "@/generated/prisma/client";
 import type { CurrentUser } from "@/server/auth/session";
 import { requireJobAccess } from "@/server/auth/session";
 
@@ -128,6 +129,22 @@ export type CandidateAssignmentTimelineItem = {
   };
   comment: string | null;
   createdAt: Date;
+};
+
+export type CandidateHistoryTimelineItem = {
+  id: string;
+  action: AuditAction | "stage_history" | "assignment_history";
+  badge: string;
+  title: string;
+  description: string | null;
+  actor: {
+    id: string;
+    name: string;
+    username: string;
+  } | null;
+  createdAt: Date;
+  visibility: "public" | "admin";
+  metadata: Record<string, unknown> | null;
 };
 
 function decimalToString(value: { toString(): string } | null) {
@@ -527,4 +544,240 @@ export async function listCandidateAssignmentTimeline(
       createdAt: true,
     },
   });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
+
+function compactMetadata(metadata: Record<string, unknown> | null, isAdmin: boolean) {
+  if (!metadata) {
+    return null;
+  }
+
+  const hiddenKeys = new Set([
+    "offeredCtc",
+    "offerDate",
+    "joiningDate",
+    "previousResumeFilePath",
+  ]);
+
+  return Object.fromEntries(
+    Object.entries(metadata).filter(([key]) => isAdmin || !hiddenKeys.has(key)),
+  );
+}
+
+function formatAssignee(assignee: { username: string } | null) {
+  return assignee ? `@${assignee.username}` : "Unassigned";
+}
+
+function summarizeAuditAction(
+  action: AuditAction,
+  metadata: Record<string, unknown> | null,
+  isAdmin: boolean,
+) {
+  switch (action) {
+    case "candidate_created":
+      return {
+        badge: "Created",
+        title: "Candidate created",
+        description: stringValue(metadata?.initialStage)
+          ? `Initial stage: ${metadata?.initialStage}`
+          : null,
+      };
+    case "candidate_updated":
+      return { badge: "Updated", title: "Candidate details updated", description: null };
+    case "candidate_resume_replaced":
+      return {
+        badge: "Resume",
+        title: "Resume replaced",
+        description: isAdmin ? stringValue(metadata?.resumeFileName) : null,
+      };
+    case "candidate_feedback_updated":
+      return { badge: "Feedback", title: "Feedback updated", description: null };
+    case "comment_created":
+      return { badge: "Comment", title: "Comment added", description: null };
+    case "comment_updated":
+      return { badge: "Comment", title: "Comment updated", description: null };
+    case "comment_deleted":
+      return { badge: "Comment", title: "Comment deleted", description: null };
+    case "offer_created":
+      return {
+        badge: "Offer",
+        title: "Offer details added",
+        description: isAdmin ? stringValue(metadata?.offerStatus) : null,
+      };
+    case "offer_updated":
+      return {
+        badge: "Offer",
+        title: "Offer details updated",
+        description: isAdmin ? stringValue(metadata?.offerStatus) : null,
+      };
+    default:
+      return {
+        badge: action.split("_")[0] ?? "Audit",
+        title: action.replaceAll("_", " "),
+        description: null,
+      };
+  }
+}
+
+export async function listCandidateHistoryTimeline(
+  user: CurrentUser,
+  jobId: string,
+  candidateId: string,
+): Promise<CandidateHistoryTimelineItem[]> {
+  const candidate = await prisma.candidate.findFirst({
+    where: { id: candidateId, jobId },
+    select: { id: true, createdAt: true },
+  });
+
+  if (!candidate) {
+    return [];
+  }
+
+  const [stageHistory, assignmentHistory, auditLogs] = await Promise.all([
+    prisma.candidateStageHistory.findMany({
+      where: { candidateId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        fromStage: { select: { name: true } },
+        toStage: { select: { name: true } },
+        movedBy: { select: { id: true, name: true, username: true } },
+        comment: true,
+        createdAt: true,
+      },
+    }),
+    prisma.candidateAssignmentHistory.findMany({
+      where: { candidateId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        previousAssignee: { select: { id: true, name: true, username: true } },
+        newAssignee: { select: { id: true, name: true, username: true } },
+        assignedBy: { select: { id: true, name: true, username: true } },
+        comment: true,
+        createdAt: true,
+      },
+    }),
+    prisma.auditLog.findMany({
+      where: {
+        OR: [
+          { entityType: "candidate", entityId: candidateId },
+          { metadata: { path: ["candidateId"], equals: candidateId } },
+        ],
+        action: {
+          notIn: ["candidate_stage_moved", "candidate_assigned", "notification_created"],
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        action: true,
+        entityType: true,
+        entityId: true,
+        metadata: true,
+        createdAt: true,
+        actor: { select: { id: true, name: true, username: true } },
+      },
+    }),
+  ]);
+
+  const commentIds = auditLogs
+    .filter((log) => log.entityType === "comment")
+    .map((log) => log.entityId);
+
+  const comments = commentIds.length
+    ? await prisma.candidateComment.findMany({
+        where: { id: { in: commentIds }, candidateId },
+        select: {
+          id: true,
+          body: true,
+          visibility: true,
+          deletedAt: true,
+        },
+      })
+    : [];
+
+  const commentsById = new Map(comments.map((comment) => [comment.id, comment]));
+  const isAdmin = user.role === "admin";
+
+  const stageItems: CandidateHistoryTimelineItem[] = stageHistory.map((item) => ({
+    id: `stage-${item.id}`,
+    action: "stage_history",
+    badge: "Stage",
+    title: item.fromStage
+      ? `${item.fromStage.name} -> ${item.toStage.name}`
+      : `Created in ${item.toStage.name}`,
+    description: item.comment,
+    actor: item.movedBy,
+    createdAt: item.createdAt,
+    visibility: "public",
+    metadata: null,
+  }));
+
+  const assignmentItems: CandidateHistoryTimelineItem[] = assignmentHistory.map((item) => ({
+    id: `assignment-${item.id}`,
+    action: "assignment_history",
+    badge: "Assignment",
+    title: `${formatAssignee(item.previousAssignee)} -> ${formatAssignee(item.newAssignee)}`,
+    description: item.comment,
+    actor: item.assignedBy,
+    createdAt: item.createdAt,
+    visibility: "public",
+    metadata: null,
+  }));
+
+  const auditItems: CandidateHistoryTimelineItem[] = auditLogs
+    .map((log) => {
+      const metadata = isRecord(log.metadata) ? log.metadata : null;
+      const summary = summarizeAuditAction(log.action, metadata, isAdmin);
+      const comment = commentsById.get(log.entityId);
+      const isAdminOnlyComment = comment?.visibility === "admin";
+      const visibility: CandidateHistoryTimelineItem["visibility"] = isAdminOnlyComment
+        ? "admin"
+        : "public";
+      const description =
+        comment && !comment.deletedAt
+          ? isAdmin || !isAdminOnlyComment
+            ? comment.body
+            : "Admin-only comment content hidden."
+          : summary.description;
+
+      if (!isAdmin && isAdminOnlyComment) {
+        return {
+          id: `audit-${log.id}`,
+          action: log.action,
+          badge: summary.badge,
+          title: summary.title,
+          description: "Admin-only comment content hidden.",
+          actor: log.actor,
+          createdAt: log.createdAt,
+          visibility,
+          metadata: compactMetadata(metadata, false),
+        };
+      }
+
+      return {
+        id: `audit-${log.id}`,
+        action: log.action,
+        badge: summary.badge,
+        title: summary.title,
+        description,
+        actor: log.actor,
+        createdAt: log.createdAt,
+        visibility,
+        metadata: compactMetadata(metadata, isAdmin),
+      };
+    })
+    .filter((item) => isAdmin || item.action !== "offer_created" || item.description === null);
+
+  return [...stageItems, ...assignmentItems, ...auditItems].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  );
 }

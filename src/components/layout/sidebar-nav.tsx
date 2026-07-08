@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, BriefcaseBusiness, LayoutDashboard, UsersRound } from "lucide-react";
+import {
+  BarChart3,
+  BriefcaseBusiness,
+  ClipboardList,
+  LayoutDashboard,
+  UsersRound,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -19,6 +25,7 @@ const navItems: NavItem[] = [
   { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/admin/users", label: "Users", icon: UsersRound, adminOnly: true },
+  { href: "/admin/audit", label: "Audit", icon: ClipboardList, adminOnly: true },
 ];
 
 function isActive(pathname: string, href: string, exact?: boolean) {

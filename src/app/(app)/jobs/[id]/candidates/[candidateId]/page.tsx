@@ -4,10 +4,9 @@ import type { Metadata } from "next";
 import { ArrowLeft, Download } from "lucide-react";
 
 import { CandidateAssignmentPanel } from "@/components/candidates/candidate-assignment-panel";
-import { CandidateAssignmentTimeline } from "@/components/candidates/candidate-assignment-timeline";
+import { CandidateHistoryTimeline } from "@/components/candidates/candidate-history-timeline";
 import { CommentThread } from "@/components/candidates/comment-thread";
 import { EditCandidateButton } from "@/components/candidates/edit-candidate-button";
-import { CandidateStageTimeline } from "@/components/candidates/candidate-stage-timeline";
 import { ResumeReplaceForm } from "@/components/candidates/resume-replace-form";
 import { OfferDetailsPanel } from "@/components/offers/offer-details-panel";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   getCandidateForJob,
-  listCandidateAssignmentTimeline,
-  listCandidateStageTimeline,
+  listCandidateHistoryTimeline,
 } from "@/features/candidates/queries";
 import { listCommentsForCandidate, listMentionableUsersForJob } from "@/features/comments/queries";
 import { getJobForUser } from "@/features/jobs/queries";
@@ -44,12 +42,11 @@ export async function generateMetadata({
 export default async function CandidateDetailPage({ params }: CandidateDetailPageProps) {
   const { id, candidateId } = await params;
   const user = await requireJobAccess(id);
-  const [job, candidate, stageTimeline, assignmentTimeline, comments, mentionableUsers, offer] =
+  const [job, candidate, historyTimeline, comments, mentionableUsers, offer] =
     await Promise.all([
       getJobForUser(user, id),
       getCandidateForJob(user, id, candidateId),
-      listCandidateStageTimeline(id, candidateId),
-      listCandidateAssignmentTimeline(id, candidateId),
+      listCandidateHistoryTimeline(user, id, candidateId),
       listCommentsForCandidate(user, candidateId),
       listMentionableUsersForJob(id),
       user.role === "admin" ? getOfferForCandidate(candidateId) : null,
@@ -198,8 +195,7 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
         </CardContent>
       </Card>
 
-      <CandidateAssignmentTimeline items={assignmentTimeline} />
-      <CandidateStageTimeline items={stageTimeline} />
+      <CandidateHistoryTimeline items={historyTimeline} />
     </div>
   );
 }

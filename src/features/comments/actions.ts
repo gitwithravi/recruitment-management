@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/db/client";
-import { writeAuditLog } from "@/server/audit";
+import { writeAuditLog, writeCandidateHistory } from "@/server/audit";
 import { dispatchMentionNotification } from "@/server/notifications/dispatch";
 import { getCurrentUser, requireJobAccess } from "@/server/auth/session";
 import { saveAttachmentFile } from "@/server/storage";
@@ -188,9 +188,10 @@ export async function createCommentAction(
         }
       }
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action: "comment_created",
+        candidateId,
         entityType: "comment",
         entityId: commentId,
         metadata: {
@@ -336,9 +337,10 @@ export async function updateCommentAction(
         }
       }
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action: "comment_updated",
+        candidateId: comment.candidateId,
         entityType: "comment",
         entityId: commentId,
         metadata: {
@@ -392,9 +394,10 @@ export async function deleteCommentAction(
         data: { deletedAt: new Date() },
       });
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action: "comment_deleted",
+        candidateId: comment.candidateId,
         entityType: "comment",
         entityId: commentId,
         metadata: {

@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/db/client";
-import { writeAuditLog } from "@/server/audit";
+import { writeAuditLog, writeCandidateHistory } from "@/server/audit";
 import { dispatchAssignmentNotification } from "@/server/notifications/dispatch";
 import { requireJobAccess } from "@/server/auth/session";
 import { deleteStoredFile, saveResumeFile } from "@/server/storage";
@@ -149,11 +149,10 @@ export async function createCandidateAction(
         },
       });
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action: "candidate_created",
-        entityType: "candidate",
-        entityId: candidate.id,
+        candidateId: candidate.id,
         metadata: {
           jobId,
           name: candidate.name,
@@ -274,14 +273,13 @@ export async function updateCandidateAction(
         },
       });
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action:
           canEditFeedback && existing.feedback !== updated.feedback
             ? "candidate_feedback_updated"
             : "candidate_updated",
-        entityType: "candidate",
-        entityId: updated.id,
+        candidateId: updated.id,
         metadata: {
           jobId,
           name: updated.name,
@@ -356,11 +354,10 @@ export async function replaceCandidateResumeAction(
         data: { resumeFilePath: savedResume.relativePath },
       });
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action: "candidate_resume_replaced",
-        entityType: "candidate",
-        entityId: candidateId,
+        candidateId,
         metadata: {
           jobId,
           name: existing.name,
@@ -469,11 +466,10 @@ export async function moveCandidateAction(
         commentId = createdComment.id;
       }
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action: "candidate_stage_moved",
-        entityType: "candidate",
-        entityId: candidate.id,
+        candidateId: candidate.id,
         metadata: {
           jobId,
           candidateName: candidate.name,
@@ -643,11 +639,10 @@ export async function assignCandidateAction(
         }
       }
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action: "candidate_assigned",
-        entityType: "candidate",
-        entityId: candidate.id,
+        candidateId: candidate.id,
         metadata: {
           jobId,
           candidateName: candidate.name,

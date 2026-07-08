@@ -281,14 +281,14 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 17 — Audit Trail & Candidate Timeline
 
-- [ ] Central `writeAuditLog()` helper
-- [ ] Central `writeCandidateHistory()` helper
-- [ ] `GET /jobs/[id]/candidates/[candidateId]/history` (unified timeline)
-- [ ] Strip admin-only comment content + offer details for non-admins
-- [ ] Timeline UI grouped by date with action badges
-- [ ] Admin-only `/admin/audit` screen with filters
+- [x] Central `writeAuditLog()` helper
+- [x] Central `writeCandidateHistory()` helper
+- [x] `GET /jobs/[id]/candidates/[candidateId]/history` (unified timeline)
+- [x] Strip admin-only comment content + offer details for non-admins
+- [x] Timeline UI grouped by date with action badges
+- [x] Admin-only `/admin/audit` screen with filters
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** All key actions recorded · chronological timeline · admin sees full · users see sanitized history for attached jobs
 
 ---

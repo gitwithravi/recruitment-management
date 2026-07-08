@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/db/client";
-import { writeAuditLog } from "@/server/audit";
+import { writeCandidateHistory } from "@/server/audit";
 import { requireAdmin } from "@/server/auth/session";
 
 export type OfferFormState = {
@@ -96,9 +96,10 @@ export async function upsertOfferAction(
         select: { id: true },
       });
 
-      await writeAuditLog(tx, {
+      await writeCandidateHistory(tx, {
         actorId: user.id,
         action: actionType,
+        candidateId,
         entityType: "offer",
         entityId: offer.id,
         metadata: {
