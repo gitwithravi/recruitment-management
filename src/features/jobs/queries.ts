@@ -37,6 +37,14 @@ export type JobDetail = JobListItem & {
   }[];
 };
 
+export type AssignableJobUser = {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  role: "admin" | "user";
+};
+
 function statusWhere(status: JobStatusFilter) {
   return status === "all" ? {} : { status };
 }
@@ -180,4 +188,25 @@ export async function getJobForUser(user: CurrentUser, jobId: string): Promise<J
     })),
     attachedUsers: job.users.map((membership) => membership.user),
   };
+}
+
+export async function listAssignableUsersForJob(jobId: string): Promise<AssignableJobUser[]> {
+  const users = await prisma.user.findMany({
+    where: {
+      isActive: true,
+      jobMemberships: {
+        none: { jobId },
+      },
+    },
+    orderBy: [{ role: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      email: true,
+      role: true,
+    },
+  });
+
+  return users;
 }

@@ -101,13 +101,13 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 5 — Job User Assignment (Admin)
 
-- [ ] `GET /jobs/[id]/users` (Admin)
-- [ ] `POST /jobs/[id]/users` (attach; block duplicates)
-- [ ] `DELETE /jobs/[id]/users/[userId]` (detach)
-- [ ] UI panel with add/remove controls
-- [ ] Audit log on attach/detach
+- [x] `GET /jobs/[id]/users` (Admin)
+- [x] `POST /jobs/[id]/users` (attach; block duplicates)
+- [x] `DELETE /jobs/[id]/users/[userId]` (detach)
+- [x] UI panel with add/remove controls
+- [x] Audit log on attach/detach
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Admin attaches multiple users · no duplicate attachments · detached users lose access immediately
 
 ---
@@ -330,7 +330,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 2 — Auth             | Not started |       |
 | 3 — User Mgmt        | Done        |       |
 | 4 — Jobs             | Done        |       |
-| 5 — Job Users        | Not started |       |
+| 5 — Job Users        | Done        |       |
 | 6 — Stages           | Not started |       |
 | 7 — Candidates       | Not started |       |
 | 8 — Board UI         | Not started |       |

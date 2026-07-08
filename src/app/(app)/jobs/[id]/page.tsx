@@ -5,11 +5,11 @@ import { ArrowLeft, BarChart3, Columns3, ListChecks, UsersRound, Workflow } from
 
 import { JobActions } from "@/components/jobs/job-actions";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
+import { JobUsersPanel } from "@/components/jobs/job-users-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { getJobForUser } from "@/features/jobs/queries";
+import { getJobForUser, listAssignableUsersForJob } from "@/features/jobs/queries";
 import { cn } from "@/lib/utils";
 import { requireJobAccess } from "@/server/auth/session";
 
@@ -67,6 +67,8 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
   }
 
   const canManageJobs = user.role === "admin";
+  const assignableUsers =
+    canManageJobs && activeTab === "users" ? await listAssignableUsersForJob(job.id) : [];
 
   return (
     <div className="space-y-6">
@@ -133,7 +135,14 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
         />
       ) : null}
       {activeTab === "stages" ? <StagesTab job={job} canManageJobs={canManageJobs} /> : null}
-      {activeTab === "users" ? <UsersTab job={job} canManageJobs={canManageJobs} /> : null}
+      {activeTab === "users" ? (
+        <JobUsersPanel
+          jobId={job.id}
+          attachedUsers={job.attachedUsers}
+          assignableUsers={assignableUsers}
+          canManageJobs={canManageJobs}
+        />
+      ) : null}
       {activeTab === "reports" ? (
         <PlaceholderTab
           title="Reports"
@@ -202,47 +211,6 @@ function StagesTab({
             </div>
           </div>
         ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-function UsersTab({
-  job,
-  canManageJobs,
-}: {
-  job: NonNullable<Awaited<ReturnType<typeof getJobForUser>>>;
-  canManageJobs: boolean;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Attached users</CardTitle>
-        <CardDescription>
-          {canManageJobs
-            ? "Attach and detach controls are scheduled for Phase 5."
-            : "These are the users currently attached to this job."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {job.attachedUsers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No users are attached yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {job.attachedUsers.map((attachedUser, index) => (
-              <div key={attachedUser.id}>
-                {index > 0 ? <Separator className="mb-3" /> : null}
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{attachedUser.name}</p>
-                    <p className="text-xs text-muted-foreground">@{attachedUser.username}</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{attachedUser.email}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </CardContent>
     </Card>
   );

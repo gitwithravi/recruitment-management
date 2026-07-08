@@ -158,11 +158,11 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] `GET /jobs/[id]/users` — list users attached to a job (Admin only).
-- [ ] `POST /jobs/[id]/users` — attach a user (Admin only); block duplicates.
-- [ ] `DELETE /jobs/[id]/users/[userId]` — detach a user (Admin only).
-- [ ] UI panel listing attached users with add/remove controls.
-- [ ] Audit log on attach/detach.
+- [x] `GET /jobs/[id]/users` — list users attached to a job (Admin only).
+- [x] `POST /jobs/[id]/users` — attach a user (Admin only); block duplicates.
+- [x] `DELETE /jobs/[id]/users/[userId]` — detach a user (Admin only).
+- [x] UI panel listing attached users with add/remove controls.
+- [x] Audit log on attach/detach.
 
 ### Acceptance Criteria (req 6.3, 5.1)
 

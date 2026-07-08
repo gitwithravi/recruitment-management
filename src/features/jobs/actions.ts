@@ -27,6 +27,14 @@ export type CloseJobState = {
   error?: string;
 };
 
+export type AttachJobUserState = {
+  error?: string;
+};
+
+export type DetachJobUserState = {
+  error?: string;
+};
+
 const EMPTY_ERRORS: JobFieldErrors = {};
 
 export async function createJobAction(
@@ -204,5 +212,165 @@ export async function closeJobAction(jobId: string): Promise<CloseJobState> {
     }
     console.error("closeJobAction failed", error);
     return { error: "Could not close this job. Please try again." };
+  }
+}
+
+export async function attachJobUserAction(
+  jobId: string,
+  _previousState: AttachJobUserState,
+  formData: FormData,
+): Promise<AttachJobUserState> {
+  const admin = await requireAdmin();
+  const userId = String(formData.get("userId") ?? "");
+
+  if (!userId) {
+    return { error: "Select a user to attach." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const [job, user, existing] = await Promise.all([
+        tx.job.findUnique({
+          where: { id: jobId },
+          select: { id: true, title: true },
+        }),
+        tx.user.findUnique({
+          where: { id: userId },
+          select: { id: true, name: true, username: true, isActive: true },
+        }),
+        tx.jobUser.findUnique({
+          where: {
+            jobId_userId: {
+              jobId,
+              userId,
+            },
+          },
+          select: { id: true },
+        }),
+      ]);
+
+      if (!job) {
+        throw new Error("JOB_NOT_FOUND");
+      }
+
+      if (!user || !user.isActive) {
+        throw new Error("USER_NOT_FOUND");
+      }
+
+      if (existing) {
+        throw new Error("USER_ALREADY_ATTACHED");
+      }
+
+      const membership = await tx.jobUser.create({
+        data: {
+          jobId,
+          userId,
+          attachedById: admin.id,
+        },
+        select: { id: true },
+      });
+
+      await writeAuditLog(tx, {
+        actorId: admin.id,
+        action: "job_user_attached",
+        entityType: "job_user",
+        entityId: membership.id,
+        metadata: {
+          jobId: job.id,
+          jobTitle: job.title,
+          userId: user.id,
+          username: user.username,
+          name: user.name,
+        },
+      });
+    });
+
+    revalidatePath("/jobs");
+    revalidatePath(`/jobs/${jobId}`);
+    return {};
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "JOB_NOT_FOUND") {
+        return { error: "This job no longer exists." };
+      }
+      if (error.message === "USER_NOT_FOUND") {
+        return { error: "This user is no longer active or does not exist." };
+      }
+      if (error.message === "USER_ALREADY_ATTACHED") {
+        return { error: "This user is already attached to the job." };
+      }
+    }
+
+    console.error("attachJobUserAction failed", error);
+    return { error: "Could not attach this user. Please try again." };
+  }
+}
+
+export async function detachJobUserAction(
+  jobId: string,
+  userId: string,
+): Promise<DetachJobUserState> {
+  const admin = await requireAdmin();
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const membership = await tx.jobUser.findUnique({
+        where: {
+          jobId_userId: {
+            jobId,
+            userId,
+          },
+        },
+        select: {
+          id: true,
+          job: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+            },
+          },
+        },
+      });
+
+      if (!membership) {
+        throw new Error("MEMBERSHIP_NOT_FOUND");
+      }
+
+      await tx.jobUser.delete({
+        where: { id: membership.id },
+      });
+
+      await writeAuditLog(tx, {
+        actorId: admin.id,
+        action: "job_user_detached",
+        entityType: "job_user",
+        entityId: membership.id,
+        metadata: {
+          jobId: membership.job.id,
+          jobTitle: membership.job.title,
+          userId: membership.user.id,
+          username: membership.user.username,
+          name: membership.user.name,
+        },
+      });
+    });
+
+    revalidatePath("/jobs");
+    revalidatePath(`/jobs/${jobId}`);
+    return {};
+  } catch (error) {
+    if (error instanceof Error && error.message === "MEMBERSHIP_NOT_FOUND") {
+      return { error: "This user is no longer attached to the job." };
+    }
+
+    console.error("detachJobUserAction failed", error);
+    return { error: "Could not detach this user. Please try again." };
   }
 }
