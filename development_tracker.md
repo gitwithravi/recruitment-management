@@ -295,12 +295,12 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 18 — Dashboard
 
-- [ ] `GET /dashboard` (role-aware)
-- [ ] Admin: jobs count, candidates per stage, assignments per user, recent activity
-- [ ] User: assigned resumes across attached jobs, recent notifications
-- [ ] Quick links to jobs + notifications
+- [x] `GET /dashboard` (role-aware, served at `/`)
+- [x] Admin: jobs count, candidates per stage, assignments per user, recent activity
+- [x] User: assigned resumes across attached jobs, recent notifications, my jobs
+- [x] Quick links to jobs + notifications
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Authenticated users land on a relevant, server-rendered dashboard
 
 ---
@@ -343,10 +343,10 @@ Legend at the bottom maps statuses to a quick health summary.
 | 15 — Reports         | Done        |       |
 | 16 — CSV Export      | Done        |       |
 | 17 — Audit/History   | Not started |       |
-| 18 — Dashboard       | Not started |       |
+| 18 — Dashboard       | Done        |       |
 | 19 — Hardening/Tests | Not started |       |
 
-**Last updated:** Phase 16 complete
+**Last updated:** Phase 18 complete
 **Blockers / notes:** —
 
 ---

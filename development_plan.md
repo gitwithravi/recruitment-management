@@ -505,10 +505,10 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] `GET /dashboard` — role-aware summary.
+- [x] `GET /dashboard` — role-aware summary.
   - Admin: counts of jobs, candidates per stage, assignments per user, recent activity.
   - User: their assigned resumes across attached jobs, recent notifications.
-- [ ] Quick links to jobs and notifications.
+- [x] Quick links to jobs and notifications.
 
 ### Acceptance Criteria
 
