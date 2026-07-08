@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -155,7 +156,9 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                         }
                       />
                       <DropdownMenuContent align="end" className="min-w-44">
-                        <DropdownMenuLabel>{isSelfUser ? "You" : user.name}</DropdownMenuLabel>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>{isSelfUser ? "You" : user.name}</DropdownMenuLabel>
+                        </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setEditTarget(user)}>
                           <Pencil className="size-4" aria-hidden="true" />

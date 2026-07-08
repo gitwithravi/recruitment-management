@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -50,10 +51,12 @@ export function UserMenu({ user }: { user: CurrentUser }) {
         }
       />
       <DropdownMenuContent align="end" className="min-w-56">
-        <DropdownMenuLabel className="flex flex-col gap-0.5 pt-2">
-          <span className="text-sm font-medium text-foreground">{user.name}</span>
-          <span className="text-xs font-normal text-muted-foreground">@{user.username}</span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col gap-0.5 pt-2">
+            <span className="text-sm font-medium text-foreground">{user.name}</span>
+            <span className="text-xs font-normal text-muted-foreground">@{user.username}</span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <div className="flex items-center gap-2 px-1.5 py-1 text-xs text-muted-foreground">
           <UserCircle2 className="size-4" aria-hidden="true" />

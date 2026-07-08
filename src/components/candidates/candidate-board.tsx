@@ -40,6 +40,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -645,7 +646,9 @@ function CandidateCard({
               }
             />
             <DropdownMenuContent align="end" className="min-w-36">
-              <DropdownMenuLabel>Candidate</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Candidate</DropdownMenuLabel>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onMoveCandidate(candidate)}
