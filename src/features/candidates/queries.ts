@@ -2,10 +2,17 @@ import "server-only";
 
 import { prisma } from "@/db/client";
 import type { CurrentUser } from "@/server/auth/session";
+import { requireJobAccess } from "@/server/auth/session";
 
 export type CandidateFilters = {
   search?: string;
   stageId?: string;
+  assignedUserId?: string;
+  source?: string;
+  currentCity?: string;
+  minExperience?: number | null;
+  maxExperience?: number | null;
+  noticePeriod?: string;
 };
 
 export type CandidateListItem = {
@@ -290,12 +297,111 @@ export async function getCandidateForJob(
   };
 }
 
+export type CandidateFilterOptions = {
+  stages: { id: string; name: string; position: number }[];
+  assignedUsers: { id: string; name: string; username: string }[];
+  sources: string[];
+  cities: string[];
+  noticePeriods: string[];
+};
+
+export async function getCandidateFilterOptions(jobId: string): Promise<CandidateFilterOptions> {
+  const [stages, candidates, assignedUsers] = await Promise.all([
+    prisma.jobStage.findMany({
+      where: { jobId },
+      orderBy: { position: "asc" },
+      select: { id: true, name: true, position: true },
+    }),
+    prisma.candidate.findMany({
+      where: { jobId },
+      select: { source: true, currentCity: true, noticePeriod: true },
+    }),
+    prisma.user.findMany({
+      where: {
+        OR: [{ assignedCandidates: { some: { jobId } } }, { jobMemberships: { some: { jobId } } }],
+      },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, username: true },
+    }),
+  ]);
+
+  return {
+    stages: stages.map((stage) => ({
+      id: stage.id,
+      name: stage.name,
+      position: stage.position,
+    })),
+    assignedUsers,
+    sources: [...new Set(candidates.map((candidate) => candidate.source))].sort(),
+    cities: [...new Set(candidates.map((candidate) => candidate.currentCity))].sort(),
+    noticePeriods: [...new Set(candidates.map((candidate) => candidate.noticePeriod))].sort(),
+  };
+}
+
+export async function queryCandidates(
+  jobId: string,
+  filters: CandidateFilters = {},
+): Promise<CandidateListItem[]> {
+  await requireJobAccess(jobId);
+  const search = filters.search?.trim();
+  const minExperience =
+    typeof filters.minExperience === "number" && !Number.isNaN(filters.minExperience)
+      ? filters.minExperience
+      : null;
+  const maxExperience =
+    typeof filters.maxExperience === "number" && !Number.isNaN(filters.maxExperience)
+      ? filters.maxExperience
+      : null;
+
+  const candidates = await prisma.candidate.findMany({
+    where: {
+      jobId,
+      ...(filters.stageId ? { currentStageId: filters.stageId } : {}),
+      ...(filters.assignedUserId ? { assignedUserId: filters.assignedUserId } : {}),
+      ...(filters.source ? { source: filters.source } : {}),
+      ...(filters.currentCity ? { currentCity: filters.currentCity } : {}),
+      ...(filters.noticePeriod ? { noticePeriod: filters.noticePeriod } : {}),
+      ...(minExperience !== null ? { totalExperience: { gte: minExperience } } : {}),
+      ...(maxExperience !== null ? { totalExperience: { lte: maxExperience } } : {}),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+              { phone: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    orderBy: [{ updatedAt: "desc" }],
+    select: {
+      id: true,
+      jobId: true,
+      name: true,
+      email: true,
+      phone: true,
+      totalExperience: true,
+      relevantExperience: true,
+      currentCity: true,
+      noticePeriod: true,
+      source: true,
+      feedback: true,
+      createdAt: true,
+      updatedAt: true,
+      currentStage: { select: { id: true, name: true, position: true } },
+      assignedUser: { select: { id: true, name: true, username: true } },
+    },
+  });
+
+  return candidates.map(toCandidateListItem);
+}
+
 export async function getCandidateBoardForJob(jobId: string): Promise<{
   stages: BoardStage[];
   candidates: BoardCandidate[];
   filters: BoardFilters;
 }> {
-  const [stages, candidates, assignedUsers] = await Promise.all([
+  const [stageOptions, candidates, assignedUsers] = await Promise.all([
     prisma.jobStage.findMany({
       where: { jobId },
       orderBy: { position: "asc" },
@@ -360,7 +466,7 @@ export async function getCandidateBoardForJob(jobId: string): Promise<{
   }));
 
   return {
-    stages,
+    stages: stageOptions,
     candidates: boardCandidates,
     filters: {
       assignedUsers,

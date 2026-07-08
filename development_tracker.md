@@ -239,13 +239,13 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 14 — Search, Filters, and List View
 
-- [ ] Shared `queryCandidates({ jobId, search, filters })`
-- [ ] Filters: stage, assigned_user_id, source, current_city, experience range, notice_period
-- [ ] Search across name/email/phone (case-insensitive partial)
-- [ ] Job-scoped; Admin can pick any accessible job
-- [ ] List view (shadcn DataTable) reusing same filters
+- [x] Shared `queryCandidates({ jobId, search, filters })`
+- [x] Filters: stage, assigned_user_id, source, current_city, experience range, notice_period
+- [x] Search across name/email/phone (case-insensitive partial)
+- [x] Job-scoped; Admin can pick any accessible job
+- [x] List view (shadcn DataTable) reusing same filters
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Search/filters work in accessible jobs · combinable filters · no results from unattached jobs
 
 ---
@@ -325,9 +325,9 @@ Legend at the bottom maps statuses to a quick health summary.
 
 | Phase                | Status      | Notes |
 | -------------------- | ----------- | ----- |
-| 0 — Bootstrap        | Not started |       |
-| 1 — Schema           | Not started |       |
-| 2 — Auth             | Not started |       |
+| 0 — Bootstrap        | Done        |       |
+| 1 — Schema           | Done        |       |
+| 2 — Auth             | Done        |       |
 | 3 — User Mgmt        | Done        |       |
 | 4 — Jobs             | Done        |       |
 | 5 — Job Users        | Done        |       |
@@ -335,18 +335,18 @@ Legend at the bottom maps statuses to a quick health summary.
 | 7 — Candidates       | Done        |       |
 | 8 — Board UI         | Done        |       |
 | 9 — Stage Move       | Done        |       |
-| 10 — Assignment      | Not started |       |
+| 10 — Assignment      | Done        |       |
 | 11 — Comments        | Done        |       |
 | 12 — Offers          | Done        |       |
 | 13 — Notifications   | Done        |       |
-| 14 — Search/Filters  | Not started |       |
+| 14 — Search/Filters  | Done        |       |
 | 15 — Reports         | Not started |       |
 | 16 — CSV Export      | Not started |       |
 | 17 — Audit/History   | Not started |       |
 | 18 — Dashboard       | Not started |       |
 | 19 — Hardening/Tests | Not started |       |
 
-**Last updated:** —
+**Last updated:** Phase 14 complete
 **Blockers / notes:** —
 
 ---

@@ -412,11 +412,11 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] Shared server function `queryCandidates({ jobId, search, filters })` used by board, list, export, and reports.
-- [ ] Filters: stage, assigned_user_id, source, current_city, total_experience range, notice_period.
-- [ ] Search across name/email/phone (case-insensitive, partial match).
-- [ ] Job-scoped by default; Admin can scope to any accessible job.
-- [ ] List view as an alternative to the board (shadcn `DataTable`) with the same filters.
+- [x] Shared server function `queryCandidates({ jobId, search, filters })` used by board, list, export, and reports.
+- [x] Filters: stage, assigned_user_id, source, current_city, total_experience range, notice_period.
+- [x] Search across name/email/phone (case-insensitive, partial match).
+- [x] Job-scoped by default; Admin can scope to any accessible job.
+- [x] List view as an alternative to the board (shadcn `DataTable`) with the same filters.
 
 ### Acceptance Criteria (req 12)
 
