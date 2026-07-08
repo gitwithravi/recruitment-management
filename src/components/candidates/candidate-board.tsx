@@ -22,6 +22,7 @@ import {
   Loader2,
   MoreHorizontal,
   Search,
+  UserCheck,
   UserRound,
 } from "lucide-react";
 
@@ -48,7 +49,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { moveCandidateAction } from "@/features/candidates/actions";
+import { assignCandidateAction, moveCandidateAction } from "@/features/candidates/actions";
 import type { BoardCandidate, BoardFilters, BoardStage } from "@/features/candidates/queries";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +76,12 @@ type PendingMove = {
   fromStage: BoardStage;
   toStage: BoardStage | null;
 };
+
+type PendingAssignment = {
+  candidate: BoardCandidate;
+};
+
+const UNASSIGNED = "__unassigned__";
 
 const ALL = "__all__";
 
@@ -120,6 +127,11 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
   const [selectedStageId, setSelectedStageId] = React.useState("");
   const [moveError, setMoveError] = React.useState<string | null>(null);
   const [isMoving, startMoveTransition] = React.useTransition();
+  const [pendingAssignment, setPendingAssignment] = React.useState<PendingAssignment | null>(null);
+  const [selectedAssigneeId, setSelectedAssigneeId] = React.useState(UNASSIGNED);
+  const [assignComment, setAssignComment] = React.useState("");
+  const [assignError, setAssignError] = React.useState<string | null>(null);
+  const [isAssigning, startAssignTransition] = React.useTransition();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -273,6 +285,57 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
     });
   }
 
+  function openAssignDialog(candidate: BoardCandidate) {
+    setPendingAssignment({ candidate });
+    setSelectedAssigneeId(candidate.assignedUser?.id ?? UNASSIGNED);
+    setAssignComment("");
+    setAssignError(null);
+  }
+
+  function closeAssignDialog() {
+    if (isAssigning) return;
+    setPendingAssignment(null);
+    setSelectedAssigneeId(UNASSIGNED);
+    setAssignComment("");
+    setAssignError(null);
+  }
+
+  function confirmAssign() {
+    if (!pendingAssignment) {
+      return;
+    }
+
+    const targetCandidate = pendingAssignment.candidate;
+    const newAssigneeId = selectedAssigneeId === UNASSIGNED ? null : selectedAssigneeId;
+    const previousCandidates = boardCandidates;
+    const newAssignedUser =
+      filters.assignedUsers.find((user) => user.id === newAssigneeId) ?? null;
+
+    setAssignError(null);
+    setBoardCandidates((current) =>
+      current.map((candidate) =>
+        candidate.id === targetCandidate.id ? { ...candidate, assignedUser: newAssignedUser } : candidate,
+      ),
+    );
+
+    startAssignTransition(async () => {
+      const result = await assignCandidateAction(
+        jobId,
+        targetCandidate.id,
+        newAssigneeId,
+        assignComment,
+      );
+
+      if (result.error) {
+        setBoardCandidates(previousCandidates);
+        setAssignError(result.error);
+        return;
+      }
+
+      closeAssignDialog();
+    });
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border p-3">
@@ -375,6 +438,7 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
               stage={stage}
               stages={stages}
               candidates={candidatesByStage.get(stage.id) ?? []}
+              assignableUsers={filters.assignedUsers}
               onMoveCandidate={(candidate) => {
                 const fromStage = stages.find(
                   (stageItem) => stageItem.id === candidate.currentStageId,
@@ -382,6 +446,7 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
                 if (!fromStage) return;
                 openMoveDialog({ candidate, fromStage, toStage: null });
               }}
+              onAssignCandidate={openAssignDialog}
             />
           ))}
         </div>
@@ -391,8 +456,10 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
               jobId={jobId}
               candidate={activeCandidate}
               stages={stages}
+              assignableUsers={filters.assignedUsers}
               overlay
               onMoveCandidate={() => undefined}
+              onAssignCandidate={() => undefined}
             />
           ) : null}
         </DragOverlay>
@@ -468,6 +535,83 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={Boolean(pendingAssignment)}
+        onOpenChange={(open) => !open && closeAssignDialog()}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign candidate</DialogTitle>
+            <DialogDescription>
+              Assign this candidate to a user attached to the job, or leave them unassigned.
+            </DialogDescription>
+          </DialogHeader>
+          {pendingAssignment ? (
+            <div className="space-y-4">
+              <div className="rounded-lg border p-3 text-sm">
+                <p className="font-medium">{pendingAssignment.candidate.name}</p>
+                <p className="mt-1 text-muted-foreground">
+                  {pendingAssignment.candidate.assignedUser
+                    ? `Currently @${pendingAssignment.candidate.assignedUser.username}`
+                    : "Currently unassigned"}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assign-target-user">Assign to</Label>
+                <select
+                  id="assign-target-user"
+                  value={selectedAssigneeId}
+                  onChange={(event) => setSelectedAssigneeId(event.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                  disabled={isAssigning}
+                >
+                  <option value={UNASSIGNED}>Unassigned</option>
+                  {filters.assignedUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} (@{user.username})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assign-comment">Comment</Label>
+                <textarea
+                  id="assign-comment"
+                  value={assignComment}
+                  onChange={(event) => setAssignComment(event.target.value)}
+                  rows={4}
+                  maxLength={5000}
+                  placeholder="Optional assignment note"
+                  disabled={isAssigning}
+                  className="flex min-h-24 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+                />
+              </div>
+              {assignError ? (
+                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {assignError}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" type="button" />}>Cancel</DialogClose>
+            <Button disabled={isAssigning} onClick={confirmAssign}>
+              {isAssigning ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  Assigning...
+                </>
+              ) : (
+                <>
+                  <UserCheck className="size-4" aria-hidden="true" />
+                  Confirm assignment
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -510,13 +654,17 @@ function BoardColumn({
   stage,
   stages,
   candidates,
+  assignableUsers,
   onMoveCandidate,
+  onAssignCandidate,
 }: {
   jobId: string;
   stage: BoardStage;
   stages: BoardStage[];
   candidates: BoardCandidate[];
+  assignableUsers: BoardFilters["assignedUsers"];
   onMoveCandidate: (candidate: BoardCandidate) => void;
+  onAssignCandidate: (candidate: BoardCandidate) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `stage:${stage.id}` });
 
@@ -544,7 +692,9 @@ function BoardColumn({
               jobId={jobId}
               candidate={candidate}
               stages={stages}
+              assignableUsers={assignableUsers}
               onMoveCandidate={onMoveCandidate}
+              onAssignCandidate={onAssignCandidate}
             />
           ))
         )}
@@ -557,12 +707,16 @@ function DraggableCandidateCard({
   jobId,
   candidate,
   stages,
+  assignableUsers,
   onMoveCandidate,
+  onAssignCandidate,
 }: {
   jobId: string;
   candidate: BoardCandidate;
   stages: BoardStage[];
+  assignableUsers: BoardFilters["assignedUsers"];
   onMoveCandidate: (candidate: BoardCandidate) => void;
+  onAssignCandidate: (candidate: BoardCandidate) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: candidate.id,
@@ -578,9 +732,11 @@ function DraggableCandidateCard({
         jobId={jobId}
         candidate={candidate}
         stages={stages}
+        assignableUsers={assignableUsers}
         dragAttributes={attributes}
         dragListeners={listeners}
         onMoveCandidate={onMoveCandidate}
+        onAssignCandidate={onAssignCandidate}
       />
     </div>
   );
@@ -590,18 +746,22 @@ function CandidateCard({
   jobId,
   candidate,
   stages,
+  assignableUsers,
   overlay = false,
   dragAttributes,
   dragListeners,
   onMoveCandidate,
+  onAssignCandidate,
 }: {
   jobId: string;
   candidate: BoardCandidate;
   stages: BoardStage[];
+  assignableUsers: BoardFilters["assignedUsers"];
   overlay?: boolean;
   dragAttributes?: ReturnType<typeof useDraggable>["attributes"];
   dragListeners?: ReturnType<typeof useDraggable>["listeners"];
   onMoveCandidate: (candidate: BoardCandidate) => void;
+  onAssignCandidate: (candidate: BoardCandidate) => void;
 }) {
   return (
     <article
@@ -655,6 +815,12 @@ function CandidateCard({
                 disabled={stages.length <= 1}
               >
                 Move...
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onAssignCandidate(candidate)}
+                disabled={assignableUsers.length === 0}
+              >
+                Assign...
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
