@@ -16,7 +16,14 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CalendarDays, GripVertical, Loader2, Search, UserRound } from "lucide-react";
+import {
+  CalendarDays,
+  GripVertical,
+  Loader2,
+  MoreHorizontal,
+  Search,
+  UserRound,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,8 +37,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { moveCandidateAction } from "@/features/candidates/actions";
 import type { BoardCandidate, BoardFilters, BoardStage } from "@/features/candidates/queries";
 import { cn } from "@/lib/utils";
 
@@ -56,7 +72,7 @@ type FilterState = {
 type PendingMove = {
   candidate: BoardCandidate;
   fromStage: BoardStage;
-  toStage: BoardStage;
+  toStage: BoardStage | null;
 };
 
 const ALL = "__all__";
@@ -94,10 +110,15 @@ function includesText(value: string, search: string) {
 }
 
 export function CandidateBoard({ jobId, stages, candidates, filters }: CandidateBoardProps) {
+  const [boardCandidates, setBoardCandidates] = React.useState(candidates);
   const [filterState, setFilterState] = React.useState<FilterState>(initialFilters);
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [activeCandidateId, setActiveCandidateId] = React.useState<string | null>(null);
   const [pendingMove, setPendingMove] = React.useState<PendingMove | null>(null);
+  const [moveComment, setMoveComment] = React.useState("");
+  const [selectedStageId, setSelectedStageId] = React.useState("");
+  const [moveError, setMoveError] = React.useState<string | null>(null);
+  const [isMoving, startMoveTransition] = React.useTransition();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -119,7 +140,7 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
     const maxExperience = filterState.maxExperience ? Number(filterState.maxExperience) : null;
     const search = debouncedSearch.trim();
 
-    return candidates.filter((candidate) => {
+    return boardCandidates.filter((candidate) => {
       if (filterState.stageId !== ALL && candidate.currentStageId !== filterState.stageId) {
         return false;
       }
@@ -155,7 +176,7 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
 
       return true;
     });
-  }, [candidates, debouncedSearch, filterState]);
+  }, [boardCandidates, debouncedSearch, filterState]);
 
   const candidatesByStage = React.useMemo(() => {
     const map = new Map<string, BoardCandidate[]>();
@@ -169,9 +190,10 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
   }, [filteredCandidates, stages]);
 
   const activeCandidate = activeCandidateId
-    ? candidates.find((candidate) => candidate.id === activeCandidateId)
+    ? boardCandidates.find((candidate) => candidate.id === activeCandidateId)
     : null;
   const isDebouncing = filterState.search !== debouncedSearch;
+  const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? null;
 
   function updateFilter<K extends keyof FilterState>(key: K, value: FilterState[K]) {
     setFilterState((current) => ({ ...current, [key]: value }));
@@ -185,7 +207,7 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
     const candidateId = String(event.active.id);
     const toStageId =
       typeof event.over?.id === "string" ? event.over.id.replace("stage:", "") : null;
-    const candidate = candidates.find((item) => item.id === candidateId);
+    const candidate = boardCandidates.find((item) => item.id === candidateId);
     const toStage = stages.find((stage) => stage.id === toStageId);
     const fromStage = candidate
       ? stages.find((stage) => stage.id === candidate.currentStageId)
@@ -197,7 +219,57 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
       return;
     }
 
-    setPendingMove({ candidate, fromStage, toStage });
+    openMoveDialog({ candidate, fromStage, toStage });
+  }
+
+  function openMoveDialog(input: PendingMove) {
+    setPendingMove(input);
+    setSelectedStageId(input.toStage?.id ?? "");
+    setMoveComment("");
+    setMoveError(null);
+  }
+
+  function closeMoveDialog() {
+    if (isMoving) return;
+    setPendingMove(null);
+    setSelectedStageId("");
+    setMoveComment("");
+    setMoveError(null);
+  }
+
+  function confirmMove() {
+    if (!pendingMove || !selectedStage) {
+      setMoveError("Select a target stage.");
+      return;
+    }
+
+    const previousCandidates = boardCandidates;
+    const movedCandidate = pendingMove.candidate;
+    setMoveError(null);
+    setBoardCandidates((current) =>
+      current.map((candidate) =>
+        candidate.id === movedCandidate.id
+          ? { ...candidate, currentStageId: selectedStage.id, updatedAt: new Date() }
+          : candidate,
+      ),
+    );
+
+    startMoveTransition(async () => {
+      const result = await moveCandidateAction(
+        jobId,
+        movedCandidate.id,
+        selectedStage.id,
+        moveComment,
+      );
+
+      if (result.error) {
+        setBoardCandidates(previousCandidates);
+        setMoveError(result.error);
+        return;
+      }
+
+      closeMoveDialog();
+    });
   }
 
   return (
@@ -283,7 +355,7 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
         </div>
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            {filteredCandidates.length} of {candidates.length} candidates shown
+            {filteredCandidates.length} of {boardCandidates.length} candidates shown
           </p>
           <Button variant="outline" size="sm" onClick={() => setFilterState(initialFilters)}>
             Clear filters
@@ -300,36 +372,98 @@ export function CandidateBoard({ jobId, stages, candidates, filters }: Candidate
               key={stage.id}
               jobId={jobId}
               stage={stage}
+              stages={stages}
               candidates={candidatesByStage.get(stage.id) ?? []}
+              onMoveCandidate={(candidate) => {
+                const fromStage = stages.find(
+                  (stageItem) => stageItem.id === candidate.currentStageId,
+                );
+                if (!fromStage) return;
+                openMoveDialog({ candidate, fromStage, toStage: null });
+              }}
             />
           ))}
         </div>
         <DragOverlay>
           {activeCandidate ? (
-            <CandidateCard jobId={jobId} candidate={activeCandidate} overlay />
+            <CandidateCard
+              jobId={jobId}
+              candidate={activeCandidate}
+              stages={stages}
+              overlay
+              onMoveCandidate={() => undefined}
+            />
           ) : null}
         </DragOverlay>
       </DndContext>
 
-      <Dialog open={Boolean(pendingMove)} onOpenChange={(open) => !open && setPendingMove(null)}>
+      <Dialog open={Boolean(pendingMove)} onOpenChange={(open) => !open && closeMoveDialog()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Move candidate</DialogTitle>
             <DialogDescription>
-              Phase 9 will add the movement confirmation action and optional movement comment.
+              Confirm the stage change and optionally add a movement comment.
             </DialogDescription>
           </DialogHeader>
           {pendingMove ? (
-            <div className="rounded-lg border p-3 text-sm">
-              <p className="font-medium">{pendingMove.candidate.name}</p>
-              <p className="mt-1 text-muted-foreground">
-                {pendingMove.fromStage.name} &rarr; {pendingMove.toStage.name}
-              </p>
+            <div className="space-y-4">
+              <div className="rounded-lg border p-3 text-sm">
+                <p className="font-medium">{pendingMove.candidate.name}</p>
+                <p className="mt-1 text-muted-foreground">
+                  {pendingMove.fromStage.name} &rarr; {selectedStage?.name ?? "Select stage"}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="move-target-stage">Target stage</Label>
+                <select
+                  id="move-target-stage"
+                  value={selectedStageId}
+                  onChange={(event) => setSelectedStageId(event.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                  disabled={isMoving}
+                >
+                  <option value="">Select stage</option>
+                  {stages
+                    .filter((stage) => stage.id !== pendingMove.fromStage.id)
+                    .map((stage) => (
+                      <option key={stage.id} value={stage.id}>
+                        {stage.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="move-comment">Comment</Label>
+                <textarea
+                  id="move-comment"
+                  value={moveComment}
+                  onChange={(event) => setMoveComment(event.target.value)}
+                  rows={4}
+                  maxLength={5000}
+                  placeholder="Optional movement note"
+                  disabled={isMoving}
+                  className="flex min-h-24 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+                />
+              </div>
+              {moveError ? (
+                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {moveError}
+                </p>
+              ) : null}
             </div>
           ) : null}
           <DialogFooter>
             <DialogClose render={<Button variant="outline" type="button" />}>Cancel</DialogClose>
-            <Button disabled>Confirm in Phase 9</Button>
+            <Button disabled={isMoving || !selectedStageId} onClick={confirmMove}>
+              {isMoving ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  Moving...
+                </>
+              ) : (
+                "Confirm move"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -373,11 +507,15 @@ function FilterSelect({
 function BoardColumn({
   jobId,
   stage,
+  stages,
   candidates,
+  onMoveCandidate,
 }: {
   jobId: string;
   stage: BoardStage;
+  stages: BoardStage[];
   candidates: BoardCandidate[];
+  onMoveCandidate: (candidate: BoardCandidate) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `stage:${stage.id}` });
 
@@ -400,7 +538,13 @@ function BoardColumn({
           </div>
         ) : (
           candidates.map((candidate) => (
-            <DraggableCandidateCard key={candidate.id} jobId={jobId} candidate={candidate} />
+            <DraggableCandidateCard
+              key={candidate.id}
+              jobId={jobId}
+              candidate={candidate}
+              stages={stages}
+              onMoveCandidate={onMoveCandidate}
+            />
           ))
         )}
       </div>
@@ -411,9 +555,13 @@ function BoardColumn({
 function DraggableCandidateCard({
   jobId,
   candidate,
+  stages,
+  onMoveCandidate,
 }: {
   jobId: string;
   candidate: BoardCandidate;
+  stages: BoardStage[];
+  onMoveCandidate: (candidate: BoardCandidate) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: candidate.id,
@@ -428,8 +576,10 @@ function DraggableCandidateCard({
       <CandidateCard
         jobId={jobId}
         candidate={candidate}
+        stages={stages}
         dragAttributes={attributes}
         dragListeners={listeners}
+        onMoveCandidate={onMoveCandidate}
       />
     </div>
   );
@@ -438,15 +588,19 @@ function DraggableCandidateCard({
 function CandidateCard({
   jobId,
   candidate,
+  stages,
   overlay = false,
   dragAttributes,
   dragListeners,
+  onMoveCandidate,
 }: {
   jobId: string;
   candidate: BoardCandidate;
+  stages: BoardStage[];
   overlay?: boolean;
   dragAttributes?: ReturnType<typeof useDraggable>["attributes"];
   dragListeners?: ReturnType<typeof useDraggable>["listeners"];
+  onMoveCandidate: (candidate: BoardCandidate) => void;
 }) {
   return (
     <article
@@ -476,6 +630,32 @@ function CandidateCard({
           </Link>
           <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{candidate.currentCity}</p>
         </div>
+        {!overlay ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Actions for ${candidate.name}`}
+                >
+                  <MoreHorizontal className="size-3.5" aria-hidden="true" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="min-w-36">
+              <DropdownMenuLabel>Candidate</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onMoveCandidate(candidate)}
+                disabled={stages.length <= 1}
+              >
+                Move...
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">

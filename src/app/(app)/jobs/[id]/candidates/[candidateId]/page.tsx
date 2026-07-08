@@ -4,11 +4,12 @@ import type { Metadata } from "next";
 import { ArrowLeft, Download } from "lucide-react";
 
 import { EditCandidateButton } from "@/components/candidates/edit-candidate-button";
+import { CandidateStageTimeline } from "@/components/candidates/candidate-stage-timeline";
 import { ResumeReplaceForm } from "@/components/candidates/resume-replace-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCandidateForJob } from "@/features/candidates/queries";
+import { getCandidateForJob, listCandidateStageTimeline } from "@/features/candidates/queries";
 import { getJobForUser } from "@/features/jobs/queries";
 import { requireJobAccess } from "@/server/auth/session";
 
@@ -33,9 +34,10 @@ export async function generateMetadata({
 export default async function CandidateDetailPage({ params }: CandidateDetailPageProps) {
   const { id, candidateId } = await params;
   const user = await requireJobAccess(id);
-  const [job, candidate] = await Promise.all([
+  const [job, candidate, timeline] = await Promise.all([
     getJobForUser(user, id),
     getCandidateForJob(user, id, candidateId),
+    listCandidateStageTimeline(id, candidateId),
   ]);
 
   if (!job || !candidate) {
@@ -127,6 +129,8 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
           )}
         </CardContent>
       </Card>
+
+      <CandidateStageTimeline items={timeline} />
     </div>
   );
 }

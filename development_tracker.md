@@ -166,12 +166,12 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 9 — Stage Movement & History
 
-- [ ] `POST /jobs/[id]/candidates/[candidateId]/move` (role-aware; validate target stage; write history + optional comment)
-- [ ] Movement modal UI (drag-drop + card menu)
-- [ ] Optimistic update with rollback
-- [ ] Candidate timeline component (stage moves)
+- [x] `POST /jobs/[id]/candidates/[candidateId]/move` (role-aware; validate target stage; write history + optional comment)
+- [x] Movement modal UI (drag-drop + card menu)
+- [x] Optimistic update with rollback
+- [x] Candidate timeline component (stage moves)
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Admin moves any · users move only assigned · modal + optional comment · every move recorded · unassigned move blocked
 
 ---
@@ -334,7 +334,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 6 — Stages           | Done        |       |
 | 7 — Candidates       | Done        |       |
 | 8 — Board UI         | Done        |       |
-| 9 — Stage Move       | Not started |       |
+| 9 — Stage Move       | Done        |       |
 | 10 — Assignment      | Not started |       |
 | 11 — Comments        | Not started |       |
 | 12 — Offers          | Not started |       |

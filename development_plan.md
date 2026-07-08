@@ -273,15 +273,15 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] `POST /jobs/[id]/candidates/[candidateId]/move` — body: `{ to_stage_id, comment? }`.
+- [x] `POST /jobs/[id]/candidates/[candidateId]/move` — body: `{ to_stage_id, comment? }`.
   - Admin: any candidate. User: only candidates assigned to them.
   - Validate `to_stage_id` belongs to the same job.
   - Update `current_stage_id`, write `CandidateStageHistory` (from/to/moved_by/comment).
   - If `comment` provided, also append a job-visible comment authored by the mover.
   - Write audit log.
-- [ ] Movement modal UI (triggered from drag-drop and from card action menu).
-- [ ] Optimistic UI update with rollback on failure.
-- [ ] Candidate timeline component showing stage movements in chronological order.
+- [x] Movement modal UI (triggered from drag-drop and from card action menu).
+- [x] Optimistic UI update with rollback on failure.
+- [x] Candidate timeline component showing stage movements in chronological order.
 
 ### Acceptance Criteria (req 7.4, 16.2, 16.4)
 

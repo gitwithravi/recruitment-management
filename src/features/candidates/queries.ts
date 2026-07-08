@@ -83,6 +83,25 @@ export type BoardFilters = {
   noticePeriods: string[];
 };
 
+export type CandidateStageTimelineItem = {
+  id: string;
+  fromStage: {
+    id: string;
+    name: string;
+  } | null;
+  toStage: {
+    id: string;
+    name: string;
+  };
+  movedBy: {
+    id: string;
+    name: string;
+    username: string;
+  };
+  comment: string | null;
+  createdAt: Date;
+};
+
 function decimalToString(value: { toString(): string } | null) {
   return value ? value.toString() : null;
 }
@@ -331,4 +350,47 @@ export async function getCandidateBoardForJob(jobId: string): Promise<{
       ].sort(),
     },
   };
+}
+
+export async function listCandidateStageTimeline(
+  jobId: string,
+  candidateId: string,
+): Promise<CandidateStageTimelineItem[]> {
+  const candidate = await prisma.candidate.findFirst({
+    where: { id: candidateId, jobId },
+    select: { id: true },
+  });
+
+  if (!candidate) {
+    return [];
+  }
+
+  return prisma.candidateStageHistory.findMany({
+    where: { candidateId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      fromStage: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      toStage: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      movedBy: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+        },
+      },
+      comment: true,
+      createdAt: true,
+    },
+  });
 }

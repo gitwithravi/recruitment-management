@@ -24,6 +24,10 @@ export type ResumeReplaceState = {
   error?: string;
 };
 
+export type MoveCandidateState = {
+  error?: string;
+};
+
 const EMPTY_ERRORS: CandidateFieldErrors = {};
 
 function getResumeFromForm(formData: FormData) {
@@ -371,5 +375,135 @@ export async function replaceCandidateResumeAction(
     }
     console.error("replaceCandidateResumeAction failed", error);
     return { error: "Could not replace the resume. Please try again." };
+  }
+}
+
+export async function moveCandidateAction(
+  jobId: string,
+  candidateId: string,
+  toStageId: string,
+  comment: string,
+): Promise<MoveCandidateState> {
+  const user = await requireJobAccess(jobId);
+  const trimmedComment = comment.trim();
+
+  if (!toStageId) {
+    return { error: "Select a target stage." };
+  }
+
+  if (trimmedComment.length > 5000) {
+    return { error: "Movement comment must be 5,000 characters or fewer." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const candidate = await tx.candidate.findFirst({
+        where: { id: candidateId, jobId },
+        select: {
+          id: true,
+          name: true,
+          currentStageId: true,
+          assignedUserId: true,
+          currentStage: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!candidate) {
+        throw new Error("CANDIDATE_NOT_FOUND");
+      }
+
+      if (user.role !== "admin" && candidate.assignedUserId !== user.id) {
+        throw new Error("MOVE_NOT_ALLOWED");
+      }
+
+      const toStage = await tx.jobStage.findFirst({
+        where: { id: toStageId, jobId },
+        select: { id: true, name: true },
+      });
+
+      if (!toStage) {
+        throw new Error("STAGE_NOT_FOUND");
+      }
+
+      if (candidate.currentStageId === toStage.id) {
+        throw new Error("SAME_STAGE");
+      }
+
+      await tx.candidate.update({
+        where: { id: candidate.id },
+        data: { currentStageId: toStage.id },
+      });
+
+      const history = await tx.candidateStageHistory.create({
+        data: {
+          candidateId: candidate.id,
+          fromStageId: candidate.currentStageId,
+          toStageId: toStage.id,
+          movedById: user.id,
+          comment: trimmedComment || null,
+        },
+        select: { id: true },
+      });
+
+      let commentId: string | null = null;
+      if (trimmedComment) {
+        const createdComment = await tx.candidateComment.create({
+          data: {
+            candidateId: candidate.id,
+            authorId: user.id,
+            body: trimmedComment,
+            visibility: "job",
+          },
+          select: { id: true },
+        });
+        commentId = createdComment.id;
+      }
+
+      await writeAuditLog(tx, {
+        actorId: user.id,
+        action: "candidate_stage_moved",
+        entityType: "candidate",
+        entityId: candidate.id,
+        metadata: {
+          jobId,
+          candidateName: candidate.name,
+          fromStageId: candidate.currentStage.id,
+          fromStageName: candidate.currentStage.name,
+          toStageId: toStage.id,
+          toStageName: toStage.name,
+          stageHistoryId: history.id,
+          commentId,
+        },
+      });
+    });
+
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath(`/jobs/${jobId}/board`);
+    revalidatePath(`/jobs/${jobId}/candidates`);
+    revalidatePath(`/jobs/${jobId}/candidates/${candidateId}`);
+    return {};
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "CANDIDATE_NOT_FOUND") {
+        return { error: "This candidate no longer exists." };
+      }
+      if (error.message === "MOVE_NOT_ALLOWED") {
+        return { error: "Only admins or the assigned user can move this candidate." };
+      }
+      if (error.message === "STAGE_NOT_FOUND") {
+        return { error: "The target stage is no longer available." };
+      }
+      if (error.message === "SAME_STAGE") {
+        return { error: "Candidate is already in that stage." };
+      }
+    }
+
+    console.error("moveCandidateAction failed", error);
+    return { error: "Could not move this candidate. Please try again." };
   }
 }
