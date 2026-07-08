@@ -97,7 +97,7 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Candidate details</CardTitle>
@@ -146,22 +146,22 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
               <ResumeReplaceForm jobId={id} candidateId={candidate.id} />
             </CardContent>
           </Card>
-
-          {user.role === "admin" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Offer details</CardTitle>
-                <CardDescription>
-                  Admin-only. Offer CTC, dates, and status for this candidate.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <OfferDetailsPanel candidateId={candidate.id} initialOffer={offer ?? null} />
-              </CardContent>
-            </Card>
-          ) : null}
         </div>
       </div>
+
+      {user.role === "admin" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Offer details</CardTitle>
+            <CardDescription>
+              Admin-only. Offer CTC, dates, and status for this candidate.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <OfferDetailsPanel candidateId={candidate.id} initialOffer={offer ?? null} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
