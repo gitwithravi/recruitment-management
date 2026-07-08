@@ -130,19 +130,19 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 7 — Candidate / Resume Management
 
-- [ ] `GET /jobs/[id]/candidates` (list w/ filters/search)
-- [ ] `POST /jobs/[id]/candidates` (create; validate duplicates; require resume; set initial stage)
-- [ ] `GET /jobs/[id]/candidates/[candidateId]` (detail)
-- [ ] `PATCH /jobs/[id]/candidates/[candidateId]` (edit; role-aware)
-- [ ] `POST /jobs/[id]/candidates/[candidateId]/resume` (replace)
-- [ ] `GET /jobs/[id]/candidates/[candidateId]/resume` (download, access-checked)
-- [ ] File storage on disk with stable naming
-- [ ] Candidate create/edit form (all 8.1 fields)
-- [ ] Duplicate handling with clear server error
-- [ ] Feedback field editor (assignee-gated)
-- [ ] Audit log on create/update/resume replace
+- [x] `GET /jobs/[id]/candidates` (list w/ filters/search)
+- [x] `POST /jobs/[id]/candidates` (create; validate duplicates; require resume; set initial stage)
+- [x] `GET /jobs/[id]/candidates/[candidateId]` (detail)
+- [x] `PATCH /jobs/[id]/candidates/[candidateId]` (edit; role-aware)
+- [x] `POST /jobs/[id]/candidates/[candidateId]/resume` (replace)
+- [x] `GET /jobs/[id]/candidates/[candidateId]/resume` (download, access-checked)
+- [x] File storage on disk with stable naming
+- [x] Candidate create/edit form (all 8.1 fields)
+- [x] Duplicate handling with clear server error
+- [x] Feedback field editor (assignee-gated)
+- [x] Audit log on create/update/resume replace
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Admin/attached users create candidates · resume mandatory · duplicates blocked in same job · one resume per candidate · downloads access-checked · feedback rules enforced
 
 ---
@@ -332,7 +332,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 4 — Jobs             | Done        |       |
 | 5 — Job Users        | Done        |       |
 | 6 — Stages           | Done        |       |
-| 7 — Candidates       | Not started |       |
+| 7 — Candidates       | Done        |       |
 | 8 — Board UI         | Not started |       |
 | 9 — Stage Move       | Not started |       |
 | 10 — Assignment      | Not started |       |

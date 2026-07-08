@@ -110,7 +110,11 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
               <Link
                 key={tab.value}
                 href={
-                  tab.value === "board" ? `/jobs/${job.id}` : `/jobs/${job.id}?tab=${tab.value}`
+                  tab.value === "board"
+                    ? `/jobs/${job.id}`
+                    : tab.value === "candidates"
+                      ? `/jobs/${job.id}/candidates`
+                      : `/jobs/${job.id}?tab=${tab.value}`
                 }
                 aria-current={active ? "page" : undefined}
                 className={cn(

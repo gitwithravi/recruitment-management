@@ -206,22 +206,22 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] `GET /jobs/[id]/candidates` — list candidates (with filters/search params).
-- [ ] `POST /jobs/[id]/candidates` — create candidate (Admin or attached user).
+- [x] `GET /jobs/[id]/candidates` — list candidates (with filters/search params).
+- [x] `POST /jobs/[id]/candidates` — create candidate (Admin or attached user).
   - Validate duplicate email/phone within the job.
   - Require resume file upload (multipart).
   - Set initial `current_stage_id` to the first stage of the job.
-- [ ] `GET /jobs/[id]/candidates/[candidateId]` — candidate detail page.
-- [ ] `PATCH /jobs/[id]/candidates/[candidateId]` — update candidate details.
+- [x] `GET /jobs/[id]/candidates/[candidateId]` — candidate detail page.
+- [x] `PATCH /jobs/[id]/candidates/[candidateId]` — update candidate details.
   - Admin: any field.
   - User: detail fields allowed; assignment/stage/feedback restrictions apply per req 8.5.
-- [ ] `POST /jobs/[id]/candidates/[candidateId]/resume` — replace resume file (overwrites reference).
-- [ ] `GET /jobs/[id]/candidates/[candidateId]/resume` — download resume (enforce job access).
-- [ ] File storage: local disk under `/storage` with a stable naming scheme (or signed URL pattern).
-- [ ] Candidate create/edit form with all fields from 8.1.
-- [ ] Duplicate handling: server returns a clear error when email/phone exists in the same job.
-- [ ] Feedback field editor (respecting assignee-based edit rights).
-- [ ] Audit log on candidate create/update/resume replace.
+- [x] `POST /jobs/[id]/candidates/[candidateId]/resume` — replace resume file (overwrites reference).
+- [x] `GET /jobs/[id]/candidates/[candidateId]/resume` — download resume (enforce job access).
+- [x] File storage: local disk under `/storage` with a stable naming scheme (or signed URL pattern).
+- [x] Candidate create/edit form with all fields from 8.1.
+- [x] Duplicate handling: server returns a clear error when email/phone exists in the same job.
+- [x] Feedback field editor (respecting assignee-based edit rights).
+- [x] Audit log on candidate create/update/resume replace.
 
 ### Acceptance Criteria (req 8)
 
