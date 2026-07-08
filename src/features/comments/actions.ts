@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/db/client";
 import { writeAuditLog } from "@/server/audit";
+import { dispatchMentionNotification } from "@/server/notifications/dispatch";
 import { getCurrentUser, requireJobAccess } from "@/server/auth/session";
 import { saveAttachmentFile } from "@/server/storage";
 
@@ -107,12 +108,12 @@ export async function createCommentAction(
     });
 
     const validUsernames = new Map<string, string>();
-    const userMap = new Map<string, { username: string }>();
+    const userMap = new Map<string, { username: string; email: string }>();
 
     for (const ju of jobUsers) {
       const uname = ju.user.username.toLowerCase();
       validUsernames.set(uname, ju.user.id);
-      userMap.set(ju.user.id, ju.user);
+      userMap.set(ju.user.id, { username: ju.user.username, email: ju.user.email });
     }
 
     const mentionedUserIds = parseMentions(body, validUsernames).filter(
@@ -149,30 +150,41 @@ export async function createCommentAction(
         const mentionedUser = userMap.get(mentionedUserId);
 
         if (mentionedUser) {
-          const notification = await tx.notification.create({
-            data: {
+          await dispatchMentionNotification(tx, {
+            recipientUserId: mentionedUserId,
+            recipientEmail: mentionedUser.email,
+            actorName: user.name,
+            candidateName: candidate.name,
+            jobTitle: candidate.job.title,
+            jobId,
+            candidateId,
+            commentExcerpt: normalizedBody,
+          });
+
+          const notification = await tx.notification.findFirst({
+            where: {
               recipientUserId: mentionedUserId,
-              type: "comment_mention",
-              title: "You were mentioned in a comment",
-              body: `${user.name} mentioned you in a comment on ${candidate.name} (${candidate.job.title}): "${normalizedBody.slice(0, 200)}${normalizedBody.length > 200 ? "..." : ""}"`,
-              relatedJobId: jobId,
               relatedCandidateId: candidateId,
+              type: "comment_mention",
             },
+            orderBy: { createdAt: "desc" },
             select: { id: true },
           });
 
-          await writeAuditLog(tx, {
-            actorId: user.id,
-            action: "notification_created",
-            entityType: "notification",
-            entityId: notification.id,
-            metadata: {
-              jobId,
-              candidateId,
-              recipientUserId: mentionedUserId,
-              type: "comment_mention",
-            },
-          });
+          if (notification) {
+            await writeAuditLog(tx, {
+              actorId: user.id,
+              action: "notification_created",
+              entityType: "notification",
+              entityId: notification.id,
+              metadata: {
+                jobId,
+                candidateId,
+                recipientUserId: mentionedUserId,
+                type: "comment_mention",
+              },
+            });
+          }
         }
       }
 
@@ -226,7 +238,7 @@ export async function updateCommentAction(
         id: true,
         authorId: true,
         candidateId: true,
-        candidate: { select: { jobId: true, name: true } },
+        candidate: { select: { jobId: true, name: true, job: { select: { title: true } } } },
       },
     });
 
@@ -241,16 +253,16 @@ export async function updateCommentAction(
     const jobUsers = await prisma.jobUser.findMany({
       where: { jobId: comment.candidate.jobId },
       select: {
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, email: true } },
       },
     });
 
     const validUsernames = new Map<string, string>();
-    const userMap = new Map<string, { username: string }>();
+    const userMap = new Map<string, { username: string; email: string }>();
 
     for (const ju of jobUsers) {
       validUsernames.set(ju.user.username.toLowerCase(), ju.user.id);
-      userMap.set(ju.user.id, ju.user);
+      userMap.set(ju.user.id, { username: ju.user.username, email: ju.user.email });
     }
 
     const mentionedUserIds = parseMentions(body, validUsernames).filter(
@@ -286,30 +298,41 @@ export async function updateCommentAction(
         const mentionedUser = userMap.get(mentionedUserId);
 
         if (mentionedUser) {
-          const notification = await tx.notification.create({
-            data: {
+          await dispatchMentionNotification(tx, {
+            recipientUserId: mentionedUserId,
+            recipientEmail: mentionedUser.email,
+            actorName: user.name,
+            candidateName: comment.candidate.name,
+            jobTitle: comment.candidate.job.title,
+            jobId: comment.candidate.jobId,
+            candidateId: comment.candidateId,
+            commentExcerpt: normalizedBody,
+          });
+
+          const notification = await tx.notification.findFirst({
+            where: {
               recipientUserId: mentionedUserId,
-              type: "comment_mention",
-              title: "You were mentioned in an updated comment",
-              body: `${user.name} mentioned you in a comment on ${comment.candidate.name}: "${normalizedBody.slice(0, 200)}${normalizedBody.length > 200 ? "..." : ""}"`,
-              relatedJobId: comment.candidate.jobId,
               relatedCandidateId: comment.candidateId,
+              type: "comment_mention",
             },
+            orderBy: { createdAt: "desc" },
             select: { id: true },
           });
 
-          await writeAuditLog(tx, {
-            actorId: user.id,
-            action: "notification_created",
-            entityType: "notification",
-            entityId: notification.id,
-            metadata: {
-              jobId: comment.candidate.jobId,
-              candidateId: comment.candidateId,
-              recipientUserId: mentionedUserId,
-              type: "comment_mention",
-            },
-          });
+          if (notification) {
+            await writeAuditLog(tx, {
+              actorId: user.id,
+              action: "notification_created",
+              entityType: "notification",
+              entityId: notification.id,
+              metadata: {
+                jobId: comment.candidate.jobId,
+                candidateId: comment.candidateId,
+                recipientUserId: mentionedUserId,
+                type: "comment_mention",
+              },
+            });
+          }
         }
       }
 

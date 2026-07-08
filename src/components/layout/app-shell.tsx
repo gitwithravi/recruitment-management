@@ -9,12 +9,24 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/layout/user-menu";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { cn } from "@/lib/utils";
 import type { CurrentUser } from "@/server/auth/session";
+import type { NotificationItem } from "@/features/notifications/queries";
 
 const SIDEBAR_WIDTH = "15rem";
 
-export function AppShell({ children, user }: { children: React.ReactNode; user: CurrentUser }) {
+export function AppShell({
+  children,
+  user,
+  initialNotifications,
+  initialUnreadCount,
+}: {
+  children: React.ReactNode;
+  user: CurrentUser;
+  initialNotifications: NotificationItem[];
+  initialUnreadCount: number;
+}) {
   const [desktopOpen, setDesktopOpen] = React.useState(true);
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
@@ -70,6 +82,10 @@ export function AppShell({ children, user }: { children: React.ReactNode; user: 
           </Link>
           <div className="ml-auto flex items-center gap-1">
             <ThemeToggle />
+            <NotificationBell
+              initialNotifications={initialNotifications}
+              initialUnreadCount={initialUnreadCount}
+            />
             <Separator orientation="vertical" className="mx-1 h-6" />
             <UserMenu user={user} />
           </div>

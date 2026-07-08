@@ -223,16 +223,16 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 13 — Notifications (In-App + Email)
 
-- [ ] `GET /notifications` (current user, unread first)
-- [ ] `POST /notifications/[id]/read`
-- [ ] `POST /notifications/read-all`
-- [ ] Notifications dropdown/screen + unread badge
-- [ ] Email transport setup (SMTP env or provider SDK)
-- [ ] Email templates: assignment + mention (content per req 15.3)
-- [ ] Dispatch helper (both channels; skip actor; skip out-of-job users)
-- [ ] Used by Phase 10 and Phase 11
+- [x] `GET /notifications` (current user, unread first)
+- [x] `POST /notifications/[id]/read`
+- [x] `POST /notifications/read-all`
+- [x] Notifications dropdown/screen + unread badge
+- [x] Email transport setup (SMTP env or provider SDK)
+- [x] Email templates: assignment + mention (content per req 15.3)
+- [x] Dispatch helper (both channels; skip actor; skip out-of-job users)
+- [x] Used by Phase 10 and Phase 11
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Assignment + mention notifications delivered in-app and by email with required context · no notifications to out-of-job users or the actor
 
 ---
@@ -338,7 +338,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 10 — Assignment      | Not started |       |
 | 11 — Comments        | Done        |       |
 | 12 — Offers          | Not started |       |
-| 13 — Notifications   | Not started |       |
+| 13 — Notifications   | Done        |       |
 | 14 — Search/Filters  | Not started |       |
 | 15 — Reports         | Not started |       |
 | 16 — CSV Export      | Not started |       |

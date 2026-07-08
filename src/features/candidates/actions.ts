@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/db/client";
 import { writeAuditLog } from "@/server/audit";
+import { dispatchAssignmentNotification } from "@/server/notifications/dispatch";
 import { requireJobAccess } from "@/server/auth/session";
 import { deleteStoredFile, saveResumeFile } from "@/server/storage";
 import {
@@ -603,33 +604,43 @@ export async function assignCandidateAction(
 
       let notificationId: string | null = null;
       if (newAssignee && newAssignee.id !== user.id) {
-        const notification = await tx.notification.create({
-          data: {
+        await dispatchAssignmentNotification(tx, {
+          recipientUserId: newAssignee.id,
+          recipientEmail: newAssignee.email,
+          actorName: user.name,
+          candidateName: candidate.name,
+          jobTitle: candidate.job.title,
+          jobId,
+          candidateId: candidate.id,
+          comment: trimmedComment || undefined,
+        });
+
+        const notification = await tx.notification.findFirst({
+          where: {
             recipientUserId: newAssignee.id,
-            type: "resume_assignment",
-            title: "Resume assigned to you",
-            body: `${user.name} assigned ${candidate.name} to you for ${candidate.job.title}.${
-              trimmedComment ? ` Comment: ${trimmedComment}` : ""
-            }`,
-            relatedJobId: jobId,
             relatedCandidateId: candidate.id,
+            type: "resume_assignment",
           },
+          orderBy: { createdAt: "desc" },
           select: { id: true },
         });
-        notificationId = notification.id;
 
-        await writeAuditLog(tx, {
-          actorId: user.id,
-          action: "notification_created",
-          entityType: "notification",
-          entityId: notification.id,
-          metadata: {
-            jobId,
-            candidateId: candidate.id,
-            recipientUserId: newAssignee.id,
-            type: "resume_assignment",
-          },
-        });
+        if (notification) {
+          notificationId = notification.id;
+
+          await writeAuditLog(tx, {
+            actorId: user.id,
+            action: "notification_created",
+            entityType: "notification",
+            entityId: notification.id,
+            metadata: {
+              jobId,
+              candidateId: candidate.id,
+              recipientUserId: newAssignee.id,
+              type: "resume_assignment",
+            },
+          });
+        }
       }
 
       await writeAuditLog(tx, {
