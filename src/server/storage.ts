@@ -6,6 +6,8 @@ import path from "node:path";
 const STORAGE_ROOT = path.join(process.cwd(), "storage");
 const RESUME_ROOT = path.join(STORAGE_ROOT, "resumes");
 const RESUME_RELATIVE_ROOT = path.join("storage", "resumes");
+const ATTACHMENT_ROOT = path.join(STORAGE_ROOT, "attachments");
+const ATTACHMENT_RELATIVE_ROOT = path.join("storage", "attachments");
 
 function safeFileName(fileName: string) {
   const parsed = path.parse(fileName);
@@ -57,10 +59,56 @@ export async function deleteStoredFile(relativePath: string | null | undefined) 
 
   const normalized = path.normalize(relativePath);
 
-  if (!normalized.startsWith(`${RESUME_RELATIVE_ROOT}${path.sep}`)) {
+  if (
+    !normalized.startsWith(`${RESUME_RELATIVE_ROOT}${path.sep}`) &&
+    !normalized.startsWith(`${ATTACHMENT_RELATIVE_ROOT}${path.sep}`)
+  ) {
     return;
   }
 
-  const absolutePath = path.join(RESUME_ROOT, path.relative(RESUME_RELATIVE_ROOT, normalized));
+  const root = normalized.startsWith(`${RESUME_RELATIVE_ROOT}${path.sep}`)
+    ? RESUME_ROOT
+    : ATTACHMENT_ROOT;
+  const relativeRoot = normalized.startsWith(`${RESUME_RELATIVE_ROOT}${path.sep}`)
+    ? RESUME_RELATIVE_ROOT
+    : ATTACHMENT_RELATIVE_ROOT;
+
+  const absolutePath = path.join(root, path.relative(relativeRoot, normalized));
   await rm(absolutePath, { force: true });
+}
+
+export async function saveAttachmentFile(input: {
+  jobId: string;
+  commentId: string;
+  file: File;
+}) {
+  const bytes = Buffer.from(await input.file.arrayBuffer());
+  const directory = path.join(ATTACHMENT_ROOT, input.jobId, input.commentId);
+  const fileName = `${Date.now()}-${safeFileName(input.file.name)}`;
+  const absolutePath = path.join(directory, fileName);
+
+  await mkdir(directory, { recursive: true });
+  await writeFile(absolutePath, bytes);
+
+  return {
+    absolutePath,
+    relativePath: path.relative(process.cwd(), absolutePath),
+    fileName: input.file.name,
+    mimeType: input.file.type || "application/octet-stream",
+    size: bytes.length,
+  };
+}
+
+export async function readAttachmentFile(relativePath: string) {
+  const normalized = path.normalize(relativePath);
+
+  if (!normalized.startsWith(`${ATTACHMENT_RELATIVE_ROOT}${path.sep}`)) {
+    throw new Error("Invalid attachment path.");
+  }
+
+  const absolutePath = path.join(
+    ATTACHMENT_ROOT,
+    path.relative(ATTACHMENT_RELATIVE_ROOT, normalized),
+  );
+  return readFile(absolutePath);
 }

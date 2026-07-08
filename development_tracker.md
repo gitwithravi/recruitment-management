@@ -193,17 +193,17 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 11 — Comments, Attachments, Mentions
 
-- [ ] `GET /jobs/[id]/candidates/[candidateId]/comments` (admin-only filtered for non-admins)
-- [ ] `POST .../comments` (visibility; parse @mentions against job users; create mentions; trigger notifications)
-- [ ] `PATCH /jobs/[id]/comments/[commentId]` (edit own; re-parse mentions)
-- [ ] `DELETE /jobs/[id]/comments/[commentId]` (own or any by Admin)
-- [ ] `POST /jobs/[id]/comments/[commentId]/attachments` (upload)
-- [ ] `GET .../attachments/[attachmentId]` (download, visibility + job access enforced)
-- [ ] Comment thread UI with composer, visibility toggle (Admin), attachments, edit/delete menus
-- [ ] Mention autocomplete (job-attached users only)
-- [ ] Audit log on comment create/delete
+- [x] `GET /jobs/[id]/candidates/[candidateId]/comments` (admin-only filtered for non-admins)
+- [x] `POST .../comments` (visibility; parse @mentions against job users; create mentions; trigger notifications)
+- [x] `PATCH /jobs/[id]/comments/[commentId]` (edit own; re-parse mentions)
+- [x] `DELETE /jobs/[id]/comments/[commentId]` (own or any by Admin)
+- [x] `POST /jobs/[id]/comments/[commentId]/attachments` (upload)
+- [x] `GET .../attachments/[attachmentId]` (download, visibility + job access enforced)
+- [x] Comment thread UI with composer, visibility toggle (Admin), attachments, edit/delete menus
+- [x] Mention autocomplete (job-attached users only)
+- [x] Audit log on comment create/delete
 
-**Phase status:** Not started
+**Phase status:** Done
 **Acceptance check:** Thread per candidate · comments + attachments in assigned jobs · admin-only hidden from users · creator/Admin delete · mentions notify in-app + email · no out-of-job mentions
 
 ---
@@ -336,7 +336,7 @@ Legend at the bottom maps statuses to a quick health summary.
 | 8 — Board UI         | Done        |       |
 | 9 — Stage Move       | Done        |       |
 | 10 — Assignment      | Not started |       |
-| 11 — Comments        | Not started |       |
+| 11 — Comments        | Done        |       |
 | 12 — Offers          | Not started |       |
 | 13 — Notifications   | Not started |       |
 | 14 — Search/Filters  | Not started |       |

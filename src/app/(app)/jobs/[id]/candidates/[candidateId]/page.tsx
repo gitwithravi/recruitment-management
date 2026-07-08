@@ -5,6 +5,7 @@ import { ArrowLeft, Download } from "lucide-react";
 
 import { CandidateAssignmentPanel } from "@/components/candidates/candidate-assignment-panel";
 import { CandidateAssignmentTimeline } from "@/components/candidates/candidate-assignment-timeline";
+import { CommentThread } from "@/components/candidates/comment-thread";
 import { EditCandidateButton } from "@/components/candidates/edit-candidate-button";
 import { CandidateStageTimeline } from "@/components/candidates/candidate-stage-timeline";
 import { ResumeReplaceForm } from "@/components/candidates/resume-replace-form";
@@ -16,6 +17,7 @@ import {
   listCandidateAssignmentTimeline,
   listCandidateStageTimeline,
 } from "@/features/candidates/queries";
+import { listCommentsForCandidate, listMentionableUsersForJob } from "@/features/comments/queries";
 import { getJobForUser } from "@/features/jobs/queries";
 import { requireJobAccess } from "@/server/auth/session";
 
@@ -40,12 +42,15 @@ export async function generateMetadata({
 export default async function CandidateDetailPage({ params }: CandidateDetailPageProps) {
   const { id, candidateId } = await params;
   const user = await requireJobAccess(id);
-  const [job, candidate, stageTimeline, assignmentTimeline] = await Promise.all([
-    getJobForUser(user, id),
-    getCandidateForJob(user, id, candidateId),
-    listCandidateStageTimeline(id, candidateId),
-    listCandidateAssignmentTimeline(id, candidateId),
-  ]);
+  const [job, candidate, stageTimeline, assignmentTimeline, comments, mentionableUsers] =
+    await Promise.all([
+      getJobForUser(user, id),
+      getCandidateForJob(user, id, candidateId),
+      listCandidateStageTimeline(id, candidateId),
+      listCandidateAssignmentTimeline(id, candidateId),
+      listCommentsForCandidate(user, candidateId),
+      listMentionableUsersForJob(id),
+    ]);
 
   if (!job || !candidate) {
     notFound();
@@ -154,6 +159,23 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
           ) : (
             <p className="text-sm text-muted-foreground">No feedback added yet.</p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Comments</CardTitle>
+          <CardDescription>Discuss this candidate with @mentions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CommentThread
+            jobId={id}
+            candidateId={candidate.id}
+            initialComments={comments}
+            mentionableUsers={mentionableUsers}
+            currentUserId={user.id}
+            isAdmin={user.role === "admin"}
+          />
         </CardContent>
       </Card>
 
