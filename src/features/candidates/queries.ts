@@ -102,6 +102,27 @@ export type CandidateStageTimelineItem = {
   createdAt: Date;
 };
 
+export type CandidateAssignmentTimelineItem = {
+  id: string;
+  previousAssignee: {
+    id: string;
+    name: string;
+    username: string;
+  } | null;
+  newAssignee: {
+    id: string;
+    name: string;
+    username: string;
+  } | null;
+  assignedBy: {
+    id: string;
+    name: string;
+    username: string;
+  };
+  comment: string | null;
+  createdAt: Date;
+};
+
 function decimalToString(value: { toString(): string } | null) {
   return value ? value.toString() : null;
 }
@@ -383,6 +404,51 @@ export async function listCandidateStageTimeline(
         },
       },
       movedBy: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+        },
+      },
+      comment: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function listCandidateAssignmentTimeline(
+  jobId: string,
+  candidateId: string,
+): Promise<CandidateAssignmentTimelineItem[]> {
+  const candidate = await prisma.candidate.findFirst({
+    where: { id: candidateId, jobId },
+    select: { id: true },
+  });
+
+  if (!candidate) {
+    return [];
+  }
+
+  return prisma.candidateAssignmentHistory.findMany({
+    where: { candidateId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      previousAssignee: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+        },
+      },
+      newAssignee: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+        },
+      },
+      assignedBy: {
         select: {
           id: true,
           name: true,

@@ -178,16 +178,16 @@ Legend at the bottom maps statuses to a quick health summary.
 
 ## Phase 10 — Assignment Management
 
-- [ ] `POST /jobs/[id]/candidates/[candidateId]/assign` (role-aware; validate assignee in job; allow null)
-- [ ] Write `CandidateAssignmentHistory`
-- [ ] Trigger in-app + email notification (Phase 13)
-- [ ] Assignment UI (select from job users / Unassigned)
-- [ ] Optional comment input
-- [ ] Assignment history section in timeline
-- [ ] Audit log on assignment
+- [x] `POST /jobs/[id]/candidates/[candidateId]/assign` (role-aware; validate assignee in job; allow null)
+- [x] Write `CandidateAssignmentHistory`
+- [x] Trigger in-app notification row (email transport in Phase 13)
+- [x] Assignment UI (select from job users / Unassigned)
+- [x] Optional comment input
+- [x] Assignment history section in timeline
+- [x] Audit log on assignment
 
-**Phase status:** Not started
-**Acceptance check:** Single assignee · unassign allowed · Admin assigns any · users assign only own, only to job users · history recorded · notifications dispatched
+**Phase status:** Done
+**Acceptance check:** Single assignee · unassign allowed · Admin assigns any · users assign only own, only to job users · history recorded · in-app notification rows created
 
 ---
 

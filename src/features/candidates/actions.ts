@@ -28,6 +28,10 @@ export type MoveCandidateState = {
   error?: string;
 };
 
+export type AssignCandidateState = {
+  error?: string;
+};
+
 const EMPTY_ERRORS: CandidateFieldErrors = {};
 
 function getResumeFromForm(formData: FormData) {
@@ -505,5 +509,167 @@ export async function moveCandidateAction(
 
     console.error("moveCandidateAction failed", error);
     return { error: "Could not move this candidate. Please try again." };
+  }
+}
+
+export async function assignCandidateAction(
+  jobId: string,
+  candidateId: string,
+  newAssigneeId: string | null,
+  comment: string,
+): Promise<AssignCandidateState> {
+  const user = await requireJobAccess(jobId);
+  const trimmedComment = comment.trim();
+  const normalizedAssigneeId = newAssigneeId || null;
+
+  if (trimmedComment.length > 5000) {
+    return { error: "Assignment comment must be 5,000 characters or fewer." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const candidate = await tx.candidate.findFirst({
+        where: { id: candidateId, jobId },
+        select: {
+          id: true,
+          name: true,
+          assignedUserId: true,
+          job: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+
+      if (!candidate) {
+        throw new Error("CANDIDATE_NOT_FOUND");
+      }
+
+      if (user.role !== "admin" && candidate.assignedUserId !== user.id) {
+        throw new Error("ASSIGN_NOT_ALLOWED");
+      }
+
+      if (candidate.assignedUserId === normalizedAssigneeId) {
+        throw new Error("SAME_ASSIGNEE");
+      }
+
+      let newAssignee: { id: string; name: string; username: string; email: string } | null = null;
+
+      if (normalizedAssigneeId) {
+        const membership = await tx.jobUser.findUnique({
+          where: {
+            jobId_userId: {
+              jobId,
+              userId: normalizedAssigneeId,
+            },
+          },
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                email: true,
+                isActive: true,
+              },
+            },
+          },
+        });
+
+        if (!membership?.user.isActive) {
+          throw new Error("ASSIGNEE_NOT_ATTACHED");
+        }
+
+        newAssignee = membership.user;
+      }
+
+      await tx.candidate.update({
+        where: { id: candidate.id },
+        data: { assignedUserId: normalizedAssigneeId },
+      });
+
+      const history = await tx.candidateAssignmentHistory.create({
+        data: {
+          candidateId: candidate.id,
+          previousAssigneeId: candidate.assignedUserId,
+          newAssigneeId: normalizedAssigneeId,
+          assignedById: user.id,
+          comment: trimmedComment || null,
+        },
+        select: { id: true },
+      });
+
+      let notificationId: string | null = null;
+      if (newAssignee && newAssignee.id !== user.id) {
+        const notification = await tx.notification.create({
+          data: {
+            recipientUserId: newAssignee.id,
+            type: "resume_assignment",
+            title: "Resume assigned to you",
+            body: `${user.name} assigned ${candidate.name} to you for ${candidate.job.title}.${
+              trimmedComment ? ` Comment: ${trimmedComment}` : ""
+            }`,
+            relatedJobId: jobId,
+            relatedCandidateId: candidate.id,
+          },
+          select: { id: true },
+        });
+        notificationId = notification.id;
+
+        await writeAuditLog(tx, {
+          actorId: user.id,
+          action: "notification_created",
+          entityType: "notification",
+          entityId: notification.id,
+          metadata: {
+            jobId,
+            candidateId: candidate.id,
+            recipientUserId: newAssignee.id,
+            type: "resume_assignment",
+          },
+        });
+      }
+
+      await writeAuditLog(tx, {
+        actorId: user.id,
+        action: "candidate_assigned",
+        entityType: "candidate",
+        entityId: candidate.id,
+        metadata: {
+          jobId,
+          candidateName: candidate.name,
+          previousAssigneeId: candidate.assignedUserId,
+          newAssigneeId: normalizedAssigneeId,
+          assignmentHistoryId: history.id,
+          notificationId,
+        },
+      });
+    });
+
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath(`/jobs/${jobId}/board`);
+    revalidatePath(`/jobs/${jobId}/candidates`);
+    revalidatePath(`/jobs/${jobId}/candidates/${candidateId}`);
+    return {};
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "CANDIDATE_NOT_FOUND") {
+        return { error: "This candidate no longer exists." };
+      }
+      if (error.message === "ASSIGN_NOT_ALLOWED") {
+        return { error: "Only admins or the currently assigned user can reassign this candidate." };
+      }
+      if (error.message === "ASSIGNEE_NOT_ATTACHED") {
+        return { error: "Select an active user attached to this job, or unassign the candidate." };
+      }
+      if (error.message === "SAME_ASSIGNEE") {
+        return { error: "Candidate is already assigned to that user." };
+      }
+    }
+
+    console.error("assignCandidateAction failed", error);
+    return { error: "Could not update the assignment. Please try again." };
   }
 }

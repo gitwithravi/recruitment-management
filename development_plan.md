@@ -301,15 +301,15 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 
 ### Tasks
 
-- [ ] `POST /jobs/[id]/candidates/[candidateId]/assign` — body: `{ new_assignee_id, comment? }`.
+- [x] `POST /jobs/[id]/candidates/[candidateId]/assign` — body: `{ new_assignee_id, comment? }`.
   - Admin: any candidate. User: only candidates currently assigned to them.
   - Validate `new_assignee_id` is attached to the job (or null to unassign).
   - Update `assigned_user_id`, write `CandidateAssignmentHistory`.
-  - Trigger in-app notification + email (Phase 13).
+  - Trigger in-app notification; email transport is handled in Phase 13.
   - Write audit log.
-- [ ] Assignment UI: select a user from the job's attached users (or "Unassigned").
-- [ ] Optional comment input in the assignment modal.
-- [ ] Assignment history section in candidate timeline.
+- [x] Assignment UI: select a user from the job's attached users (or "Unassigned").
+- [x] Optional comment input in the assignment modal.
+- [x] Assignment history section in candidate timeline.
 
 ### Acceptance Criteria (req 9, 16.3)
 
@@ -317,7 +317,7 @@ Stack: **Next.js (App Router) + Tailwind CSS + shadcn/ui + PostgreSQL (Docker) +
 - Resume can be unassigned.
 - Admin can assign any resume; users only those assigned to them, and only to users in the same job.
 - Assignment history is recorded.
-- Notifications are dispatched (in-app + email).
+- Notifications are dispatched in-app; email delivery is implemented in Phase 13.
 
 ---
 

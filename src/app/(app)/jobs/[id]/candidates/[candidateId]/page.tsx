@@ -3,13 +3,19 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, Download } from "lucide-react";
 
+import { CandidateAssignmentPanel } from "@/components/candidates/candidate-assignment-panel";
+import { CandidateAssignmentTimeline } from "@/components/candidates/candidate-assignment-timeline";
 import { EditCandidateButton } from "@/components/candidates/edit-candidate-button";
 import { CandidateStageTimeline } from "@/components/candidates/candidate-stage-timeline";
 import { ResumeReplaceForm } from "@/components/candidates/resume-replace-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCandidateForJob, listCandidateStageTimeline } from "@/features/candidates/queries";
+import {
+  getCandidateForJob,
+  listCandidateAssignmentTimeline,
+  listCandidateStageTimeline,
+} from "@/features/candidates/queries";
 import { getJobForUser } from "@/features/jobs/queries";
 import { requireJobAccess } from "@/server/auth/session";
 
@@ -34,10 +40,11 @@ export async function generateMetadata({
 export default async function CandidateDetailPage({ params }: CandidateDetailPageProps) {
   const { id, candidateId } = await params;
   const user = await requireJobAccess(id);
-  const [job, candidate, timeline] = await Promise.all([
+  const [job, candidate, stageTimeline, assignmentTimeline] = await Promise.all([
     getJobForUser(user, id),
     getCandidateForJob(user, id, candidateId),
     listCandidateStageTimeline(id, candidateId),
+    listCandidateAssignmentTimeline(id, candidateId),
   ]);
 
   if (!job || !candidate) {
@@ -101,15 +108,35 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Resume</CardTitle>
-            <CardDescription>One resume file is stored for each candidate.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResumeReplaceForm jobId={id} candidateId={candidate.id} />
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Assignment</CardTitle>
+              <CardDescription>
+                Assign this candidate to an attached user or leave them unassigned.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CandidateAssignmentPanel
+                key={candidate.assignedUser?.id ?? "unassigned"}
+                jobId={id}
+                candidateId={candidate.id}
+                currentAssignee={candidate.assignedUser}
+                assignableUsers={job.attachedUsers}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Resume</CardTitle>
+              <CardDescription>One resume file is stored for each candidate.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResumeReplaceForm jobId={id} candidateId={candidate.id} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <Card>
@@ -130,7 +157,8 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
         </CardContent>
       </Card>
 
-      <CandidateStageTimeline items={timeline} />
+      <CandidateAssignmentTimeline items={assignmentTimeline} />
+      <CandidateStageTimeline items={stageTimeline} />
     </div>
   );
 }
