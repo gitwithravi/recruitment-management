@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { BriefcaseBusiness, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { JobDescriptionEditor } from "@/components/jobs/job-description-editor";
 import {
   Dialog,
   DialogClose,
@@ -110,16 +111,13 @@ export function JobFormDialog({ mode, open, onOpenChange, job, trigger }: JobFor
             <Label htmlFor={isEdit ? "edit-description" : "create-description"}>
               Job description / JD
             </Label>
-            <textarea
+            <JobDescriptionEditor
               id={isEdit ? "edit-description" : "create-description"}
               name="description"
               placeholder="Describe the role, responsibilities, skills, and hiring expectations."
               defaultValue={job?.description ?? ""}
               required
-              rows={8}
-              maxLength={10000}
-              aria-invalid={Boolean(state.errors.description) || undefined}
-              className="flex min-h-32 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30"
+              ariaInvalid={Boolean(state.errors.description)}
             />
             {state.errors.description ? (
               <p className="text-xs text-destructive">{state.errors.description}</p>

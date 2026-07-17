@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/db/client";
 import { DEFAULT_JOB_STAGES } from "@/features/jobs/constants";
+import { sanitizeDescriptionHtml } from "@/lib/sanitize-html";
 import {
   validateCreateJob,
   validateStageName,
@@ -58,7 +59,7 @@ export async function createJobAction(
 
   const { errors, input } = validateCreateJob({
     title: String(formData.get("title") ?? ""),
-    description: String(formData.get("description") ?? ""),
+    description: sanitizeDescriptionHtml(String(formData.get("description") ?? "")),
   });
 
   if (!input) {
@@ -121,7 +122,7 @@ export async function updateJobAction(
 
   const { errors, input } = validateUpdateJob({
     title: String(formData.get("title") ?? ""),
-    description: String(formData.get("description") ?? ""),
+    description: sanitizeDescriptionHtml(String(formData.get("description") ?? "")),
     status: String(formData.get("status") ?? ""),
   });
 

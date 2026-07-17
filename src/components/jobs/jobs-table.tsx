@@ -31,8 +31,17 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
+function stripHtmlTags(html: string) {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function truncateDescription(description: string) {
-  return description.length > 150 ? `${description.slice(0, 147)}...` : description;
+  const text = stripHtmlTags(description);
+  return text.length > 150 ? `${text.slice(0, 147)}...` : text;
 }
 
 export function JobsTable({ jobs, canManageJobs }: JobsTableProps) {

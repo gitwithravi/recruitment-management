@@ -26,13 +26,14 @@ export function JobDescriptionDialog({ title, description }: JobDescriptionDialo
           </Button>
         }
       />
-      <DialogContent>
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <p className="max-h-[60vh] overflow-y-auto whitespace-pre-line text-sm leading-6 text-muted-foreground">
-          {description}
-        </p>
+        <div
+          className="max-h-[70vh] space-y-3 overflow-y-auto text-sm leading-6 text-muted-foreground [&_a]:text-foreground [&_a]:underline [&_a]:underline-offset-2 [&_li]:ml-5 [&_ol]:list-decimal [&_p]:leading-6 [&_ul]:list-disc"
+          dangerouslySetInnerHTML={{ __html: description }}
+        />
       </DialogContent>
     </Dialog>
   );
