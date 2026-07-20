@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/db/client";
 import type { CurrentUser } from "@/server/auth/session";
+import { sanitizeDescriptionHtml } from "@/lib/sanitize-html";
 
 export type JobStatusFilter = "all" | "open" | "closed";
 
@@ -70,7 +71,7 @@ function toJobListItem(job: {
   return {
     id: job.id,
     title: job.title,
-    description: job.description,
+    description: sanitizeDescriptionHtml(job.description),
     status: job.status,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
