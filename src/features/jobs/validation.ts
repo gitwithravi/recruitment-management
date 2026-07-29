@@ -1,4 +1,5 @@
 import "server-only";
+import { stripHtmlToText } from "@/lib/sanitize-html";
 
 export type JobFieldErrors = {
   title?: string;
@@ -32,6 +33,7 @@ function validateJobText(input: { title: string; description: string }) {
   const errors: JobFieldErrors = {};
   const title = input.title.trim();
   const description = input.description.trim();
+  const descriptionText = stripHtmlToText(description);
 
   if (!title) {
     errors.title = "Job title is required.";
@@ -39,9 +41,9 @@ function validateJobText(input: { title: string; description: string }) {
     errors.title = "Job title must be 120 characters or fewer.";
   }
 
-  if (!description) {
+  if (!descriptionText) {
     errors.description = "Job description is required.";
-  } else if (description.length > 10000) {
+  } else if (descriptionText.length > 10000) {
     errors.description = "Job description must be 10,000 characters or fewer.";
   }
 
