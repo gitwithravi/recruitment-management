@@ -31,6 +31,10 @@ export type CloseJobState = {
   error?: string;
 };
 
+export type SetJobPublishedState = {
+  error?: string;
+};
+
 export type AttachJobUserState = {
   error?: string;
 };
@@ -165,6 +169,8 @@ export async function updateJobAction(
 
     revalidatePath("/jobs");
     revalidatePath(`/jobs/${jobId}`);
+    revalidatePath("/careers");
+    revalidatePath(`/careers/${jobId}`);
     return { errors: EMPTY_ERRORS };
   } catch (error) {
     if (error instanceof Error && error.message === "JOB_NOT_FOUND") {
@@ -219,6 +225,8 @@ export async function closeJobAction(jobId: string): Promise<CloseJobState> {
 
     revalidatePath("/jobs");
     revalidatePath(`/jobs/${jobId}`);
+    revalidatePath("/careers");
+    revalidatePath(`/careers/${jobId}`);
     return {};
   } catch (error) {
     if (error instanceof Error && error.message === "JOB_NOT_FOUND") {
@@ -226,6 +234,67 @@ export async function closeJobAction(jobId: string): Promise<CloseJobState> {
     }
     console.error("closeJobAction failed", error);
     return { error: "Could not close this job. Please try again." };
+  }
+}
+
+export async function setJobPublishedAction(
+  jobId: string,
+  isPublished: boolean,
+): Promise<SetJobPublishedState> {
+  const admin = await requireAdmin();
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const job = await tx.job.findUnique({
+        where: { id: jobId },
+        select: { id: true, title: true, status: true, isPublished: true },
+      });
+
+      if (!job) {
+        throw new Error("JOB_NOT_FOUND");
+      }
+
+      if (isPublished && job.status === "closed") {
+        throw new Error("JOB_CLOSED");
+      }
+
+      if (job.isPublished === isPublished) {
+        return;
+      }
+
+      const updated = await tx.job.update({
+        where: { id: jobId },
+        data: { isPublished },
+        select: { id: true, title: true, status: true, isPublished: true },
+      });
+
+      await writeAuditLog(tx, {
+        actorId: admin.id,
+        action: "job_updated",
+        entityType: "job",
+        entityId: updated.id,
+        metadata: {
+          before: { isPublished: job.isPublished },
+          after: { isPublished: updated.isPublished },
+          title: job.title,
+        },
+      });
+    });
+
+    revalidatePath("/jobs");
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath("/careers");
+    revalidatePath(`/careers/${jobId}`);
+    return {};
+  } catch (error) {
+    if (error instanceof Error && error.message === "JOB_NOT_FOUND") {
+      return { error: "This job no longer exists." };
+    }
+    if (error instanceof Error && error.message === "JOB_CLOSED") {
+      return { error: "Closed jobs cannot be listed on the careers page." };
+    }
+    console.error("setJobPublishedAction failed", error);
+    return { error: "Could not update careers listing. Please try again." };
   }
 }
 

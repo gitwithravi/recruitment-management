@@ -11,6 +11,7 @@ export type JobListItem = {
   title: string;
   description: string;
   status: "open" | "closed";
+  isPublished: boolean;
   createdAt: Date;
   updatedAt: Date;
   createdBy: {
@@ -55,6 +56,7 @@ function toJobListItem(job: {
   title: string;
   description: string;
   status: "open" | "closed";
+  isPublished: boolean;
   createdAt: Date;
   updatedAt: Date;
   createdBy: {
@@ -73,6 +75,7 @@ function toJobListItem(job: {
     title: job.title,
     description: sanitizeDescriptionHtml(job.description),
     status: job.status,
+    isPublished: job.isPublished,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
     createdBy: job.createdBy,
@@ -97,6 +100,7 @@ export async function listJobsForUser(
       title: true,
       description: true,
       status: true,
+      isPublished: true,
       createdAt: true,
       updatedAt: true,
       createdBy: {
@@ -130,6 +134,7 @@ export async function getJobForUser(user: CurrentUser, jobId: string): Promise<J
       title: true,
       description: true,
       status: true,
+      isPublished: true,
       createdAt: true,
       updatedAt: true,
       createdBy: {

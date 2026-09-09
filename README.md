@@ -54,6 +54,8 @@ Internal recruitment workflow management app built with Next.js App Router, Tail
 
 The app runs at http://localhost:3000.
 
+Public job listings are at http://localhost:3000/careers. SMTP environment variables must be set for candidates to verify email and apply.
+
 ## Verification
 
 ```bash
@@ -101,6 +103,7 @@ Change this password before using the app outside local development.
 ## Security Notes
 
 - Login attempts are rate-limited in process by identifier and client IP.
+- Public apply OTP send and application submits are rate-limited by email and/or client IP.
 - Mutations re-check server-side role or job access before writing.
 - Resume uploads are limited to PDF, DOC, and DOCX files up to 10 MB.
 - Comment attachments are limited to common document/image/text MIME types up to 25 MB.

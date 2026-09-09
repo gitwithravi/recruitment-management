@@ -50,7 +50,7 @@ export type CandidateDetail = CandidateListItem & {
     id: string;
     name: string;
     username: string;
-  };
+  } | null;
   canEditFeedback: boolean;
 };
 
@@ -105,7 +105,7 @@ export type CandidateStageTimelineItem = {
     id: string;
     name: string;
     username: string;
-  };
+  } | null;
   comment: string | null;
   createdAt: Date;
 };
@@ -559,12 +559,7 @@ function compactMetadata(metadata: Record<string, unknown> | null, isAdmin: bool
     return null;
   }
 
-  const hiddenKeys = new Set([
-    "offeredCtc",
-    "offerDate",
-    "joiningDate",
-    "previousResumeFilePath",
-  ]);
+  const hiddenKeys = new Set(["offeredCtc", "offerDate", "joiningDate", "previousResumeFilePath"]);
 
   return Object.fromEntries(
     Object.entries(metadata).filter(([key]) => isAdmin || !hiddenKeys.has(key)),
@@ -585,6 +580,14 @@ function summarizeAuditAction(
       return {
         badge: "Created",
         title: "Candidate created",
+        description: stringValue(metadata?.initialStage)
+          ? `Initial stage: ${metadata?.initialStage}`
+          : null,
+      };
+    case "candidate_applied":
+      return {
+        badge: "Applied",
+        title: "Candidate applied via careers page",
         description: stringValue(metadata?.initialStage)
           ? `Initial stage: ${metadata?.initialStage}`
           : null,

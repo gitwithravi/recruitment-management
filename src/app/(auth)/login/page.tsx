@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { ArrowUpRight, KanbanSquare, ShieldCheck, UsersRound } from "lucide-react";
 
 import { LoginForm } from "@/components/auth/login-form";
@@ -108,6 +109,13 @@ export default async function LoginPage() {
           </div>
 
           <LoginForm />
+
+          <p className="text-center text-xs text-muted-foreground">
+            Looking for open roles?{" "}
+            <Link href="/careers" className="font-medium text-foreground/80 hover:underline">
+              Visit careers
+            </Link>
+          </p>
 
           <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
             Need access?

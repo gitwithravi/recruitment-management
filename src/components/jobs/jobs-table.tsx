@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CalendarDays, MoreHorizontal, UsersRound } from "lucide-react";
 
 import { JobActions } from "@/components/jobs/job-actions";
+import { JobListedBadge } from "@/components/jobs/job-listed-badge";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,10 @@ export function JobsTable({ jobs, canManageJobs }: JobsTableProps) {
               </div>
             </TableCell>
             <TableCell>
-              <JobStatusBadge status={job.status} />
+              <div className="flex flex-col items-start gap-1.5">
+                <JobStatusBadge status={job.status} />
+                {canManageJobs ? <JobListedBadge isPublished={job.isPublished} /> : null}
+              </div>
             </TableCell>
             <TableCell>
               <div className="flex flex-wrap gap-1.5">

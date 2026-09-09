@@ -55,14 +55,14 @@ The system must support:
 - CSV export.
 - Audit trail for important actions.
 - PostgreSQL-backed persistence.
+- Public careers listing for published open jobs.
+- Candidate self-application through the careers page, gated by email OTP.
 
 ### 3.2 Out of Scope
 
 The following are explicitly out of scope:
 
 - Candidate login.
-- Candidate self-application flow.
-- Public career page.
 - Resume parsing.
 - Calendar integration.
 - Interviewer role.
@@ -122,6 +122,7 @@ Admin can:
 - View reports.
 - Export CSV data.
 - View audit history.
+- List and unlist open jobs on the public careers page.
 
 ### 5.2 User
 
@@ -171,6 +172,7 @@ Each job must have the following fields:
 - Job Title
 - Job Description / JD
 - Status
+- Listed on careers (publish flag)
 - Created At
 - Updated At
 
@@ -199,6 +201,17 @@ Supported job statuses:
 - Admin can close a job.
 - Closed jobs remain visible to Admin.
 - Job data must not be deleted when a job is closed.
+- Admin can list an open job on `/careers`. Unpublished jobs never appear publicly.
+- Closed jobs do not appear in the public listing even if they remain marked as listed.
+
+### 6.5 Public careers page
+
+- `/careers` is public and does not require login.
+- Only jobs that are both Open and listed appear on the listing.
+- Applicants verify email with a one-time code before the apply form is shown.
+- SMTP must be configured for public applications. If it is not, the job page says applications are unavailable.
+- A successful public application creates a normal candidate in the first stage, unassigned, with source `Website`.
+- Staff can still add candidates internally without OTP.
 
 ---
 
@@ -292,9 +305,9 @@ Each candidate/resume record must have:
 
 ### 8.3 Candidate Creation
 
-- Candidates are added manually through a form.
-- Both Admin and users attached to the job can add candidates.
-- Candidate self-application does not exist.
+- Candidates are added manually through a form, or by applying on the public careers page.
+- Both Admin and users attached to the job can add candidates internally.
+- Public applicants must verify email with OTP before submitting. They do not get user accounts.
 - Candidate import is not required.
 
 ### 8.4 Duplicate Handling

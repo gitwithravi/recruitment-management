@@ -6,6 +6,7 @@ import { ArrowLeft, BarChart3, Columns3, ListChecks, UsersRound, Workflow } from
 import { CandidateBoard } from "@/components/candidates/candidate-board";
 import { JobActions } from "@/components/jobs/job-actions";
 import { JobDescriptionDialog } from "@/components/jobs/job-description-dialog";
+import { JobListedBadge } from "@/components/jobs/job-listed-badge";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { JobUsersPanel } from "@/components/jobs/job-users-panel";
 import { StageConfigPanel } from "@/components/jobs/stage-config-panel";
@@ -94,6 +95,7 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-semibold tracking-tight">{job.title}</h1>
               <JobStatusBadge status={job.status} />
+              {canManageJobs ? <JobListedBadge isPublished={job.isPublished} /> : null}
             </div>
             <JobDescriptionDialog title={job.title} description={job.description} />
           </div>

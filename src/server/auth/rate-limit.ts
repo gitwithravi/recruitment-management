@@ -74,13 +74,45 @@ export class LoginAttemptLimiter {
 
 export const loginAttemptLimiter = new LoginAttemptLimiter();
 
+export class SlidingWindowLimiter {
+  private events = new Map<string, number[]>();
+  private readonly maxEvents: number;
+  private readonly windowMs: number;
+
+  constructor(maxEvents: number, windowMs: number) {
+    this.maxEvents = maxEvents;
+    this.windowMs = windowMs;
+  }
+
+  consume(key: string, now = Date.now()) {
+    const cutoff = now - this.windowMs;
+    const timestamps = (this.events.get(key) ?? []).filter((timestamp) => timestamp > cutoff);
+
+    if (timestamps.length >= this.maxEvents) {
+      this.events.set(key, timestamps);
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil((timestamps[0] + this.windowMs - now) / 1000),
+      );
+      return { allowed: false, retryAfterSeconds };
+    }
+
+    timestamps.push(now);
+    this.events.set(key, timestamps);
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+}
+
+export function getClientIp(input: { forwardedFor?: string | null; realIp?: string | null }) {
+  return input.forwardedFor?.split(",")[0]?.trim() || input.realIp || "unknown";
+}
+
 export function getLoginRateLimitKey(input: {
   identifier: string;
   forwardedFor?: string | null;
   realIp?: string | null;
 }) {
-  const ip = input.forwardedFor?.split(",")[0]?.trim() || input.realIp || "unknown";
-  return `${ip}:${input.identifier}`;
+  return `${getClientIp(input)}:${input.identifier}`;
 }
 
 export function formatRetryAfter(seconds: number) {

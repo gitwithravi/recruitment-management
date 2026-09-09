@@ -2,6 +2,8 @@ import "server-only";
 
 import nodemailer from "nodemailer";
 
+import { isSmtpReady } from "@/lib/smtp-config";
+
 const transporter = (() => {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || "587");
@@ -19,6 +21,10 @@ const transporter = (() => {
     auth: { user, pass },
   });
 })();
+
+export function isEmailConfigured() {
+  return isSmtpReady();
+}
 
 export async function sendEmail(input: {
   to: string;

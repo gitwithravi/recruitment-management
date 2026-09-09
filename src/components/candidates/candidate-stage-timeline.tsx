@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CandidateStageTimelineItem } from "@/features/candidates/queries";
+import { formatStageMovedBy } from "@/features/careers/rules";
 
 type CandidateStageTimelineProps = {
   items: CandidateStageTimelineItem[];
@@ -42,7 +43,7 @@ export function CandidateStageTimeline({ items }: CandidateStageTimelineProps) {
                     <span>{item.toStage.name}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {formatDate(item.createdAt)} by @{item.movedBy.username}
+                    {formatDate(item.createdAt)} {formatStageMovedBy(item.movedBy)}
                   </p>
                   {item.comment ? (
                     <p className="whitespace-pre-line rounded-lg border bg-muted/30 px-3 py-2 text-sm">

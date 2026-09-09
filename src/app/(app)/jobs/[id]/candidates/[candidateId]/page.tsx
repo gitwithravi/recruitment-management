@@ -18,6 +18,7 @@ import { getJobForUser } from "@/features/jobs/queries";
 import { getOfferForCandidate } from "@/features/offers/queries";
 import { canViewOfferDetails } from "@/features/offers/rules";
 import { formatAppTitle } from "@/lib/app-config";
+import { formatCandidateCreatedBy } from "@/features/careers/rules";
 import { requireJobAccess } from "@/server/auth/session";
 
 type CandidateDetailPageProps = {
@@ -109,7 +110,7 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
               label="Assigned user"
               value={candidate.assignedUser ? `@${candidate.assignedUser.username}` : "Unassigned"}
             />
-            <Detail label="Created by" value={`@${candidate.createdBy.username}`} />
+            <Detail label="Created by" value={formatCandidateCreatedBy(candidate.createdBy)} />
           </CardContent>
         </Card>
 

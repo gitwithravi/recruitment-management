@@ -60,6 +60,7 @@ enum AuditAction {
   offer_created
   offer_updated
   notification_created
+  candidate_applied
 }
 
 model User {
@@ -96,6 +97,7 @@ model Job {
   title       String
   description String
   status      JobStatus @default(open)
+  isPublished Boolean   @default(false) @map("is_published")
   createdById String    @map("created_by")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
@@ -107,6 +109,7 @@ model Job {
   notifications Notification[]
 
   @@index([status])
+  @@index([status, isPublished])
   @@index([createdById])
   @@map("jobs")
 }
@@ -164,14 +167,14 @@ model Candidate {
   currentStageId     String   @map("current_stage_id")
   assignedUserId     String?  @map("assigned_user_id")
   feedback           String?  @db.Text
-  createdById        String   @map("created_by")
+  createdById        String?  @map("created_by")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   job               Job                          @relation(fields: [jobId], references: [id], onDelete: Cascade)
   currentStage      JobStage                     @relation("CandidateCurrentStage", fields: [currentStageId], references: [id], onDelete: Restrict)
   assignedUser      User?                        @relation("CandidateAssignedUser", fields: [assignedUserId], references: [id], onDelete: SetNull)
-  createdBy         User                         @relation("CandidateCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdBy         User?                        @relation("CandidateCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   comments          CandidateComment[]
   stageHistory      CandidateStageHistory[]
   assignmentHistory CandidateAssignmentHistory[]
@@ -244,14 +247,14 @@ model CandidateStageHistory {
   candidateId  String   @map("candidate_id")
   fromStageId  String?  @map("from_stage_id")
   toStageId    String   @map("to_stage_id")
-  movedById    String   @map("moved_by")
+  movedById    String?  @map("moved_by")
   comment      String?  @db.Text
   createdAt    DateTime @default(now()) @map("created_at")
 
   candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   fromStage JobStage? @relation("CandidateStageHistoryFromStage", fields: [fromStageId], references: [id], onDelete: SetNull)
   toStage   JobStage  @relation("CandidateStageHistoryToStage", fields: [toStageId], references: [id], onDelete: Restrict)
-  movedBy   User      @relation("CandidateStageHistoryMovedBy", fields: [movedById], references: [id], onDelete: Restrict)
+  movedBy   User?     @relation("CandidateStageHistoryMovedBy", fields: [movedById], references: [id], onDelete: Restrict)
 
   @@index([candidateId, createdAt])
   @@index([fromStageId])
@@ -333,4 +336,20 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model EmailOtp {
+  id           String    @id @default(cuid())
+  email        String
+  codeHash     String    @map("code_hash")
+  expiresAt    DateTime  @map("expires_at")
+  attemptCount Int       @default(0) @map("attempt_count")
+  verifiedAt   DateTime? @map("verified_at")
+  consumedAt   DateTime? @map("consumed_at")
+  ip           String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+  @@map("email_otps")
 }
