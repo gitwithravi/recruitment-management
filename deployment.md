@@ -33,6 +33,10 @@ SMTP_PORT=587
 SMTP_USER=notifications@example.com
 SMTP_PASS=replace-with-smtp-password
 SMTP_FROM=Recruitment <notifications@example.com>
+
+# Optional: public base URL for careers structured data, and a privacy policy link for the apply form
+APP_URL=https://jobs.example.com
+PRIVACY_POLICY_URL=
 ```
 
 Generate a strong `AUTH_SECRET`:

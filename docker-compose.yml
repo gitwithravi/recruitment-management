@@ -23,6 +23,8 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-}
       ENABLE_USER_CSV_EXPORT: ${ENABLE_USER_CSV_EXPORT:-false}
+      APP_URL: ${APP_URL:-}
+      PRIVACY_POLICY_URL: ${PRIVACY_POLICY_URL:-}
     ports:
       - "3033:3033"
     volumes:
