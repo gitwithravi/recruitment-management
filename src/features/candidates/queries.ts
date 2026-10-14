@@ -52,6 +52,12 @@ export type CandidateDetail = CandidateListItem & {
     username: string;
   } | null;
   canEditFeedback: boolean;
+  consentAt: Date | null;
+  answers: {
+    id: string;
+    questionLabel: string;
+    value: string;
+  }[];
 };
 
 export type BoardCandidate = {
@@ -286,8 +292,13 @@ export async function getCandidateForJob(
       resumeFilePath: true,
       source: true,
       feedback: true,
+      consentAt: true,
       createdAt: true,
       updatedAt: true,
+      answers: {
+        orderBy: { position: "asc" },
+        select: { id: true, questionLabel: true, value: true },
+      },
       currentStage: {
         select: {
           id: true,
@@ -323,6 +334,8 @@ export async function getCandidateForJob(
     resumeFilePath: candidate.resumeFilePath,
     createdBy: candidate.createdBy,
     canEditFeedback: user.role === "admin" || candidate.assignedUser?.id === user.id,
+    consentAt: candidate.consentAt,
+    answers: candidate.answers,
   };
 }
 

@@ -1,29 +1,36 @@
+import { isPastApplyBy } from "../jobs/posting.ts";
 import { OTP_MAX_ATTEMPTS } from "./constants.ts";
 
-export function isJobListedOnCareers(job: { status: string; isPublished: boolean }) {
-  return job.status === "open" && job.isPublished;
+type CareersJobState = {
+  status: string;
+  isPublished: boolean;
+  applyBy?: Date | null;
+};
+
+export function isJobListedOnCareers(job: CareersJobState, now = new Date()) {
+  return job.status === "open" && job.isPublished && !isPastApplyBy(job.applyBy ?? null, now);
 }
 
 export function getPublicJobPageState(
-  job: { status: string; isPublished: boolean } | null,
+  job: CareersJobState | null,
+  now = new Date(),
 ): "not_found" | "closed" | "open" {
   if (!job || !job.isPublished) {
     return "not_found";
   }
 
-  if (job.status !== "open") {
+  if (job.status !== "open" || isPastApplyBy(job.applyBy ?? null, now)) {
     return "closed";
   }
 
   return "open";
 }
 
-export function canAcceptPublicApplications(job: {
-  status: string;
-  isPublished: boolean;
-  stageCount: number;
-}) {
-  return isJobListedOnCareers(job) && job.stageCount > 0;
+export function canAcceptPublicApplications(
+  job: CareersJobState & { stageCount: number },
+  now = new Date(),
+) {
+  return isJobListedOnCareers(job, now) && job.stageCount > 0;
 }
 
 export function canPublishJob(status: string) {
@@ -127,4 +134,83 @@ export function buildApplicationConfirmationEmail(input: {
       `${input.appName}`,
     ].join("\n"),
   };
+}
+
+export type CareersFilters = {
+  q: string;
+  location: string;
+  department: string;
+  workMode: string;
+  employmentType: string;
+};
+
+export const EMPTY_CAREERS_FILTERS: CareersFilters = {
+  q: "",
+  location: "",
+  department: "",
+  workMode: "",
+  employmentType: "",
+};
+
+export function parseCareersFilters(
+  params: Record<string, string | string[] | undefined>,
+): CareersFilters {
+  const read = (key: keyof CareersFilters) => {
+    const value = params[key];
+    const text = (Array.isArray(value) ? value[0] : value) ?? "";
+    return text.trim().slice(0, 120);
+  };
+
+  return {
+    q: read("q"),
+    location: read("location"),
+    department: read("department"),
+    workMode: read("workMode"),
+    employmentType: read("employmentType"),
+  };
+}
+
+export function hasActiveCareersFilters(filters: CareersFilters) {
+  return Object.values(filters).some((value) => value.length > 0);
+}
+
+type FilterableCareersJob = {
+  title: string;
+  searchText: string;
+  location: string | null;
+  department: string | null;
+  workMode: string | null;
+  employmentType: string | null;
+};
+
+export function filterCareersJobs<T extends FilterableCareersJob>(
+  jobs: T[],
+  filters: CareersFilters,
+): T[] {
+  const query = filters.q.toLowerCase();
+  const sameText = (left: string | null, right: string) =>
+    !right || (left ?? "").trim().toLowerCase() === right.toLowerCase();
+
+  return jobs.filter(
+    (job) =>
+      (!query ||
+        [job.title, job.searchText, job.location ?? "", job.department ?? ""].some((value) =>
+          value.toLowerCase().includes(query),
+        )) &&
+      sameText(job.location, filters.location) &&
+      sameText(job.department, filters.department) &&
+      (!filters.workMode || job.workMode === filters.workMode) &&
+      (!filters.employmentType || job.employmentType === filters.employmentType),
+  );
+}
+
+export function collectFilterOptions(values: Array<string | null>) {
+  const byKey = new Map<string, string>();
+  for (const value of values) {
+    const text = value?.trim();
+    if (text && !byKey.has(text.toLowerCase())) {
+      byKey.set(text.toLowerCase(), text);
+    }
+  }
+  return [...byKey.values()].sort((left, right) => left.localeCompare(right));
 }

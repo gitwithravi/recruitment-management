@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/db/client";
 import { DEFAULT_JOB_STAGES } from "@/features/jobs/constants";
+import { JOB_POSTING_SELECT, readJobPostingFormData } from "@/features/jobs/posting";
 import { sanitizeDescriptionHtml } from "@/lib/sanitize-html";
 import {
   validateCreateJob,
@@ -64,20 +65,23 @@ export async function createJobAction(
   const { errors, input } = validateCreateJob({
     title: String(formData.get("title") ?? ""),
     description: sanitizeDescriptionHtml(String(formData.get("description") ?? "")),
+    posting: readJobPostingFormData(formData),
   });
 
   if (!input) {
     return { errors };
   }
 
+  const { title, description, ...posting } = input;
   let jobId: string;
 
   try {
     const created = await prisma.$transaction(async (tx) => {
       const job = await tx.job.create({
         data: {
-          title: input.title,
-          description: input.description,
+          title,
+          description,
+          ...posting,
           createdById: admin.id,
           stages: {
             create: DEFAULT_JOB_STAGES.map((name, index) => ({
@@ -128,6 +132,7 @@ export async function updateJobAction(
     title: String(formData.get("title") ?? ""),
     description: sanitizeDescriptionHtml(String(formData.get("description") ?? "")),
     status: String(formData.get("status") ?? ""),
+    posting: readJobPostingFormData(formData),
   });
 
   if (!input) {
@@ -138,7 +143,7 @@ export async function updateJobAction(
     await prisma.$transaction(async (tx) => {
       const before = await tx.job.findUnique({
         where: { id: jobId },
-        select: { id: true, title: true, description: true, status: true },
+        select: { id: true, title: true, description: true, status: true, ...JOB_POSTING_SELECT },
       });
 
       if (!before) {
@@ -147,12 +152,8 @@ export async function updateJobAction(
 
       const updated = await tx.job.update({
         where: { id: jobId },
-        data: {
-          title: input.title,
-          description: input.description,
-          status: input.status,
-        },
-        select: { id: true, title: true, description: true, status: true },
+        data: input,
+        select: { id: true, title: true, description: true, status: true, ...JOB_POSTING_SELECT },
       });
 
       await writeAuditLog(tx, {

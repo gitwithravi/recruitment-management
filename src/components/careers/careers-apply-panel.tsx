@@ -23,13 +23,24 @@ import {
   OTP_SEND_GENERIC_MESSAGE,
 } from "@/features/careers/constants";
 import type { CandidateFieldErrors } from "@/features/candidates/validation";
+import {
+  LONG_ANSWER_MAX,
+  SHORT_ANSWER_MAX,
+  questionFieldName,
+  type ApplicationQuestion,
+} from "@/features/questions/rules";
 
 type CareersApplyPanelProps = {
   jobId: string;
   smtpConfigured: boolean;
   verifiedEmail: string | null;
   alreadyApplied: boolean;
+  questions: ApplicationQuestion[];
+  privacyPolicyUrl: string | null;
 };
+
+const textareaClassName =
+  "flex min-h-24 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30";
 
 const sendInitial: SendApplyOtpState = {};
 const verifyInitial: VerifyApplyOtpState = {};
@@ -40,6 +51,8 @@ export function CareersApplyPanel({
   smtpConfigured,
   verifiedEmail,
   alreadyApplied,
+  questions,
+  privacyPolicyUrl,
 }: CareersApplyPanelProps) {
   const boundSend = React.useMemo(() => sendApplyOtpAction.bind(null, jobId), [jobId]);
   const boundVerify = React.useMemo(() => verifyApplyOtpAction.bind(null, jobId), [jobId]);
@@ -93,7 +106,16 @@ export function CareersApplyPanel({
           </form>
         </div>
 
-        <form action={applyAction} className="relative mt-6 space-y-4">
+        <form
+          onSubmit={(event) => {
+            // Submitting via onSubmit keeps typed values when the server returns errors;
+            // React resets uncontrolled fields after a form `action` completes.
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            React.startTransition(() => applyAction(formData));
+          }}
+          className="relative mt-6 space-y-4"
+        >
           <HoneypotField />
           <input type="hidden" name="email" value={verifiedEmail} />
 
@@ -144,6 +166,54 @@ export function CareersApplyPanel({
             <Field label="Resume" id="apply-resume" error={fieldErrors.resume}>
               <Input name="resume" type="file" required accept=".pdf,.doc,.docx" />
             </Field>
+          </div>
+
+          {questions.length > 0 ? (
+            <fieldset className="space-y-4 border-t pt-4">
+              <legend className="sr-only">Additional questions</legend>
+              <p className="text-sm font-medium">Additional questions</p>
+              {questions.map((question) => (
+                <ApplicationQuestionField
+                  key={question.id}
+                  question={question}
+                  error={applyState.answerErrors?.[question.id]}
+                />
+              ))}
+            </fieldset>
+          ) : null}
+
+          <div className="space-y-1 border-t pt-4">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="consent"
+                required
+                className="mt-0.5 size-4 shrink-0 accent-primary"
+                aria-invalid={Boolean(applyState.consentError) || undefined}
+              />
+              <span>
+                I agree that my personal details and resume may be stored and processed for
+                recruitment purposes.
+                {privacyPolicyUrl ? (
+                  <>
+                    {" "}
+                    Read the{" "}
+                    <a
+                      href={privacyPolicyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2"
+                    >
+                      privacy policy
+                    </a>
+                    .
+                  </>
+                ) : null}
+              </span>
+            </label>
+            {applyState.consentError ? (
+              <p className="text-xs text-destructive">{applyState.consentError}</p>
+            ) : null}
           </div>
 
           {applyState.generic ? (
@@ -250,6 +320,76 @@ function Field({
         id,
         "aria-invalid": Boolean(error) || undefined,
       })}
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+    </div>
+  );
+}
+
+function ApplicationQuestionField({
+  question,
+  error,
+}: {
+  question: ApplicationQuestion;
+  error?: string;
+}) {
+  const id = `apply-question-${question.id}`;
+  const name = questionFieldName(question.id);
+  const label = question.required ? question.label : `${question.label} (optional)`;
+  const invalid = Boolean(error) || undefined;
+
+  if (question.type === "yes_no" || question.type === "single_choice") {
+    const options =
+      question.type === "yes_no"
+        ? [
+            { value: "yes", label: "Yes" },
+            { value: "no", label: "No" },
+          ]
+        : question.options.map((option) => ({ value: option, label: option }));
+
+    return (
+      <fieldset className="space-y-2" aria-invalid={invalid}>
+        <legend className="text-sm font-medium">{label}</legend>
+        <div className="flex flex-col gap-1.5">
+          {options.map((option) => (
+            <label key={option.value} className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name={name}
+                value={option.value}
+                required={question.required}
+                className="size-4 accent-primary"
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
+        {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      </fieldset>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      {question.type === "long_text" ? (
+        <textarea
+          id={id}
+          name={name}
+          rows={4}
+          maxLength={LONG_ANSWER_MAX}
+          required={question.required}
+          aria-invalid={invalid}
+          className={textareaClassName}
+        />
+      ) : (
+        <Input
+          id={id}
+          name={name}
+          maxLength={SHORT_ANSWER_MAX}
+          required={question.required}
+          aria-invalid={invalid}
+        />
+      )}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
   );

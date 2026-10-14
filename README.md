@@ -54,7 +54,7 @@ Internal recruitment workflow management app built with Next.js App Router, Tail
 
 The app runs at http://localhost:3000.
 
-Public job listings are at http://localhost:3000/careers. SMTP environment variables must be set for candidates to verify email and apply.
+Public job listings are at http://localhost:3000/careers. SMTP environment variables must be set for candidates to verify email and apply. Optional: set `APP_URL` to the public base URL (used in job search structured data) and `PRIVACY_POLICY_URL` to link a privacy policy from the apply form's consent checkbox.
 
 ## Verification
 

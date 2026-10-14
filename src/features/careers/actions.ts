@@ -23,6 +23,7 @@ import {
   ALREADY_APPLIED_MESSAGE,
   APPLICATIONS_UNAVAILABLE_MESSAGE,
   APPLY_SUBMIT_PER_IP,
+  CONSENT_REQUIRED_MESSAGE,
   EMAIL_MISMATCH_MESSAGE,
   JOB_NOT_ACCEPTING_MESSAGE,
   OTP_EXPIRY_MS,
@@ -56,6 +57,11 @@ import {
   setVerifiedApplyEmailCookie,
 } from "@/features/careers/session";
 import { getAuthSecret } from "@/features/careers/verified-email";
+import {
+  isConsentGiven,
+  questionFieldName,
+  validateApplicationAnswers,
+} from "@/features/questions/rules";
 
 export type SendApplyOtpState = {
   error?: string;
@@ -70,6 +76,8 @@ export type VerifyApplyOtpState = {
 
 export type ApplyToJobState = {
   errors: CandidateFieldErrors;
+  answerErrors?: Record<string, string>;
+  consentError?: string;
   generic?: string;
 };
 
@@ -99,6 +107,7 @@ async function getAcceptingJob(jobId: string) {
     !canAcceptPublicApplications({
       status: job.status,
       isPublished: job.isPublished,
+      applyBy: job.applyBy,
       stageCount: job.stageCount,
     })
   ) {
@@ -310,8 +319,17 @@ export async function applyToJobAction(
     errors.resume = resumeError;
   }
 
-  if (!input || Object.keys(errors).length > 0 || !resume) {
-    return { errors };
+  const { errors: answerErrors, answers } = validateApplicationAnswers(
+    job.questions,
+    (questionId) => String(formData.get(questionFieldName(questionId)) ?? ""),
+  );
+  const consentError = isConsentGiven(formData.get("consent"))
+    ? undefined
+    : CONSENT_REQUIRED_MESSAGE;
+  const hasAnswerErrors = Object.keys(answerErrors).length > 0;
+
+  if (!input || Object.keys(errors).length > 0 || !resume || hasAnswerErrors || consentError) {
+    return { errors, answerErrors, consentError };
   }
 
   if (await hasAppliedWithEmail(jobId, input.email)) {
@@ -374,7 +392,16 @@ export async function applyToJobAction(
           resumeFilePath: savedResume.relativePath,
           source: PUBLIC_APPLICATION_SOURCE,
           currentStageId: firstStage.id,
+          consentAt: new Date(),
           createdById: null,
+          answers: {
+            create: answers.map((answer) => ({
+              questionId: answer.questionId,
+              questionLabel: answer.questionLabel,
+              value: answer.value,
+              position: answer.position,
+            })),
+          },
         },
         select: { id: true, name: true, email: true, phone: true },
       });

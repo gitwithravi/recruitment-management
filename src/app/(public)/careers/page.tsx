@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import { BriefcaseBusiness } from "lucide-react";
 
+import { CareersFiltersForm } from "@/components/careers/careers-filters";
 import { CareersJobCard } from "@/components/careers/careers-job-card";
 import { listPublishedJobs } from "@/features/careers/queries";
+import {
+  collectFilterOptions,
+  filterCareersJobs,
+  hasActiveCareersFilters,
+  parseCareersFilters,
+} from "@/features/careers/rules";
 import { APP_NAME, formatAppTitle } from "@/lib/app-config";
 
 export const metadata: Metadata = {
@@ -10,8 +17,15 @@ export const metadata: Metadata = {
   description: `Open roles at ${APP_NAME}`,
 };
 
-export default async function CareersPage() {
-  const jobs = await listPublishedJobs();
+type CareersPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function CareersPage({ searchParams }: CareersPageProps) {
+  const filters = parseCareersFilters(await searchParams);
+  const allJobs = await listPublishedJobs();
+  const jobs = filterCareersJobs(allJobs, filters);
+  const filtersActive = hasActiveCareersFilters(filters);
 
   return (
     <div className="space-y-6">
@@ -23,7 +37,23 @@ export default async function CareersPage() {
         </p>
       </div>
 
-      {jobs.length === 0 ? (
+      {allJobs.length > 0 ? (
+        <CareersFiltersForm
+          filters={filters}
+          locations={collectFilterOptions(allJobs.map((job) => job.location))}
+          departments={collectFilterOptions(allJobs.map((job) => job.department))}
+          showClear={filtersActive}
+        />
+      ) : null}
+
+      {allJobs.length > 0 && jobs.length === 0 ? (
+        <div className="rounded-xl border bg-card px-4 py-10 text-center">
+          <p className="text-sm font-medium">No roles match these filters</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Try a different keyword or clear the filters.
+          </p>
+        </div>
+      ) : allJobs.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-card px-4 py-16 text-center">
           <span className="inline-flex size-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
             <BriefcaseBusiness className="size-5" aria-hidden="true" />

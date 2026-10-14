@@ -3,14 +3,17 @@ import "server-only";
 import { prisma } from "@/db/client";
 import { sanitizeDescriptionHtml, stripHtmlToText } from "@/lib/sanitize-html";
 import { canAcceptPublicApplications, truncatePlainText } from "@/features/careers/rules";
+import { JOB_POSTING_SELECT, startOfUtcDay, type JobPostingFields } from "@/features/jobs/posting";
+import type { ApplicationQuestion } from "@/features/questions/rules";
 
-export type PublicJobListItem = {
+export type PublicJobListItem = JobPostingFields & {
   id: string;
   title: string;
   excerpt: string;
+  searchText: string;
 };
 
-export type PublicJobDetail = {
+export type PublicJobDetail = JobPostingFields & {
   id: string;
   title: string;
   description: string;
@@ -18,6 +21,8 @@ export type PublicJobDetail = {
   isPublished: boolean;
   stageCount: number;
   acceptsApplications: boolean;
+  createdAt: Date;
+  questions: ApplicationQuestion[];
 };
 
 export async function listPublishedJobs(): Promise<PublicJobListItem[]> {
@@ -25,20 +30,25 @@ export async function listPublishedJobs(): Promise<PublicJobListItem[]> {
     where: {
       status: "open",
       isPublished: true,
+      OR: [{ applyBy: null }, { applyBy: { gte: startOfUtcDay() } }],
     },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
       title: true,
       description: true,
+      ...JOB_POSTING_SELECT,
     },
   });
 
-  return jobs.map((job) => ({
-    id: job.id,
-    title: job.title,
-    excerpt: truncatePlainText(stripHtmlToText(sanitizeDescriptionHtml(job.description))),
-  }));
+  return jobs.map(({ description, ...job }) => {
+    const searchText = stripHtmlToText(sanitizeDescriptionHtml(description));
+    return {
+      ...job,
+      excerpt: truncatePlainText(searchText),
+      searchText,
+    };
+  });
 }
 
 export async function getPublicJob(jobId: string): Promise<PublicJobDetail | null> {
@@ -50,6 +60,19 @@ export async function getPublicJob(jobId: string): Promise<PublicJobDetail | nul
       description: true,
       status: true,
       isPublished: true,
+      createdAt: true,
+      ...JOB_POSTING_SELECT,
+      questions: {
+        orderBy: { position: "asc" },
+        select: {
+          id: true,
+          label: true,
+          type: true,
+          options: true,
+          required: true,
+          position: true,
+        },
+      },
       _count: {
         select: { stages: true },
       },
@@ -60,17 +83,17 @@ export async function getPublicJob(jobId: string): Promise<PublicJobDetail | nul
     return null;
   }
 
+  const { _count, description, ...rest } = job;
+
   return {
-    id: job.id,
-    title: job.title,
-    description: sanitizeDescriptionHtml(job.description),
-    status: job.status,
-    isPublished: job.isPublished,
-    stageCount: job._count.stages,
+    ...rest,
+    description: sanitizeDescriptionHtml(description),
+    stageCount: _count.stages,
     acceptsApplications: canAcceptPublicApplications({
       status: job.status,
       isPublished: job.isPublished,
-      stageCount: job._count.stages,
+      applyBy: job.applyBy,
+      stageCount: _count.stages,
     }),
   };
 }

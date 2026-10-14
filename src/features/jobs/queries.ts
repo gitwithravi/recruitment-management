@@ -3,10 +3,11 @@ import "server-only";
 import { prisma } from "@/db/client";
 import type { CurrentUser } from "@/server/auth/session";
 import { sanitizeDescriptionHtml } from "@/lib/sanitize-html";
+import { JOB_POSTING_SELECT, type JobPostingFields } from "@/features/jobs/posting";
 
 export type JobStatusFilter = "all" | "open" | "closed";
 
-export type JobListItem = {
+export type JobListItem = JobPostingFields & {
   id: string;
   title: string;
   description: string;
@@ -51,29 +52,39 @@ function statusWhere(status: JobStatusFilter) {
   return status === "all" ? {} : { status };
 }
 
-function toJobListItem(job: {
-  id: string;
-  title: string;
-  description: string;
-  status: "open" | "closed";
-  isPublished: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: {
+function toJobListItem(
+  job: JobPostingFields & {
     id: string;
-    name: string;
-    username: string;
-  };
-  _count: {
-    stages: number;
-    candidates: number;
-    users: number;
-  };
-}): JobListItem {
+    title: string;
+    description: string;
+    status: "open" | "closed";
+    isPublished: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    createdBy: {
+      id: string;
+      name: string;
+      username: string;
+    };
+    _count: {
+      stages: number;
+      candidates: number;
+      users: number;
+    };
+  },
+): JobListItem {
   return {
     id: job.id,
     title: job.title,
     description: sanitizeDescriptionHtml(job.description),
+    location: job.location,
+    department: job.department,
+    workMode: job.workMode,
+    employmentType: job.employmentType,
+    minExperience: job.minExperience,
+    maxExperience: job.maxExperience,
+    openings: job.openings,
+    applyBy: job.applyBy,
     status: job.status,
     isPublished: job.isPublished,
     createdAt: job.createdAt,
@@ -101,6 +112,7 @@ export async function listJobsForUser(
       description: true,
       status: true,
       isPublished: true,
+      ...JOB_POSTING_SELECT,
       createdAt: true,
       updatedAt: true,
       createdBy: {
@@ -135,6 +147,7 @@ export async function getJobForUser(user: CurrentUser, jobId: string): Promise<J
       description: true,
       status: true,
       isPublished: true,
+      ...JOB_POSTING_SELECT,
       createdAt: true,
       updatedAt: true,
       createdBy: {

@@ -17,6 +17,26 @@ enum JobStatus {
   closed
 }
 
+enum WorkMode {
+  onsite
+  hybrid
+  remote
+}
+
+enum EmploymentType {
+  full_time
+  part_time
+  contract
+  internship
+}
+
+enum JobQuestionType {
+  short_text
+  long_text
+  yes_no
+  single_choice
+}
+
 enum CommentVisibility {
   job
   admin
@@ -62,6 +82,9 @@ enum AuditAction {
   offer_updated
   notification_created
   candidate_applied
+  job_question_created
+  job_question_updated
+  job_question_deleted
 }
 
 model User {
@@ -75,39 +98,48 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  jobsCreated                 Job[]                        @relation("JobCreatedBy")
-  jobMemberships              JobUser[]                    @relation("JobUserUser")
-  jobAttachments              JobUser[]                    @relation("JobUserAttachedBy")
-  candidatesCreated           Candidate[]                  @relation("CandidateCreatedBy")
-  assignedCandidates          Candidate[]                  @relation("CandidateAssignedUser")
-  comments                    CandidateComment[]           @relation("CandidateCommentAuthor")
-  commentAttachments          CommentAttachment[]          @relation("CommentAttachmentUploadedBy")
-  commentMentions             CommentMention[]             @relation("CommentMentionMentionedUser")
-  stageMovements              CandidateStageHistory[]      @relation("CandidateStageHistoryMovedBy")
-  assignmentHistoryAssigned   CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryAssignedBy")
-  previousAssignmentHistory   CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryPreviousAssignee")
-  newAssignmentHistory        CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryNewAssignee")
-  notifications               Notification[]               @relation("NotificationRecipient")
-  auditLogs                   AuditLog[]                   @relation("AuditLogActor")
+  jobsCreated               Job[]                        @relation("JobCreatedBy")
+  jobMemberships            JobUser[]                    @relation("JobUserUser")
+  jobAttachments            JobUser[]                    @relation("JobUserAttachedBy")
+  candidatesCreated         Candidate[]                  @relation("CandidateCreatedBy")
+  assignedCandidates        Candidate[]                  @relation("CandidateAssignedUser")
+  comments                  CandidateComment[]           @relation("CandidateCommentAuthor")
+  commentAttachments        CommentAttachment[]          @relation("CommentAttachmentUploadedBy")
+  commentMentions           CommentMention[]             @relation("CommentMentionMentionedUser")
+  stageMovements            CandidateStageHistory[]      @relation("CandidateStageHistoryMovedBy")
+  assignmentHistoryAssigned CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryAssignedBy")
+  previousAssignmentHistory CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryPreviousAssignee")
+  newAssignmentHistory      CandidateAssignmentHistory[] @relation("CandidateAssignmentHistoryNewAssignee")
+  notifications             Notification[]               @relation("NotificationRecipient")
+  auditLogs                 AuditLog[]                   @relation("AuditLogActor")
 
   @@map("users")
 }
 
 model Job {
-  id          String    @id @default(cuid())
-  title       String
-  description String
-  status      JobStatus @default(open)
-  isPublished Boolean   @default(false) @map("is_published")
-  createdById String    @map("created_by")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id             String          @id @default(cuid())
+  title          String
+  description    String
+  status         JobStatus       @default(open)
+  isPublished    Boolean         @default(false) @map("is_published")
+  location       String?
+  department     String?
+  workMode       WorkMode?       @map("work_mode")
+  employmentType EmploymentType? @map("employment_type")
+  minExperience  Int?            @map("min_experience")
+  maxExperience  Int?            @map("max_experience")
+  openings       Int?
+  applyBy        DateTime?       @map("apply_by") @db.Date
+  createdById    String          @map("created_by")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
   createdBy     User           @relation("JobCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   users         JobUser[]
   stages        JobStage[]
   candidates    Candidate[]
   notifications Notification[]
+  questions     JobQuestion[]
 
   @@index([status])
   @@index([status, isPublished])
@@ -140,10 +172,10 @@ model JobStage {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  job                       Job                     @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  candidates                Candidate[]             @relation("CandidateCurrentStage")
-  stageHistoryFrom          CandidateStageHistory[] @relation("CandidateStageHistoryFromStage")
-  stageHistoryTo            CandidateStageHistory[] @relation("CandidateStageHistoryToStage")
+  job              Job                     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidates       Candidate[]             @relation("CandidateCurrentStage")
+  stageHistoryFrom CandidateStageHistory[] @relation("CandidateStageHistoryFromStage")
+  stageHistoryTo   CandidateStageHistory[] @relation("CandidateStageHistoryToStage")
 
   @@unique([jobId, position])
   @@unique([jobId, name])
@@ -152,25 +184,26 @@ model JobStage {
 }
 
 model Candidate {
-  id                 String   @id @default(cuid())
-  jobId              String   @map("job_id")
+  id                 String    @id @default(cuid())
+  jobId              String    @map("job_id")
   name               String
   email              String
   phone              String
-  totalExperience    Decimal  @map("total_experience") @db.Decimal(5, 2)
-  relevantExperience Decimal  @map("relevant_experience") @db.Decimal(5, 2)
-  currentCity        String   @map("current_city")
-  currentCtc         Decimal? @map("current_ctc") @db.Decimal(12, 2)
-  expectedCtc        Decimal? @map("expected_ctc") @db.Decimal(12, 2)
-  noticePeriod       String   @map("notice_period")
-  resumeFilePath     String   @map("resume_file_path")
+  totalExperience    Decimal   @map("total_experience") @db.Decimal(5, 2)
+  relevantExperience Decimal   @map("relevant_experience") @db.Decimal(5, 2)
+  currentCity        String    @map("current_city")
+  currentCtc         Decimal?  @map("current_ctc") @db.Decimal(12, 2)
+  expectedCtc        Decimal?  @map("expected_ctc") @db.Decimal(12, 2)
+  noticePeriod       String    @map("notice_period")
+  resumeFilePath     String    @map("resume_file_path")
   source             String
-  currentStageId     String   @map("current_stage_id")
-  assignedUserId     String?  @map("assigned_user_id")
-  feedback           String?  @db.Text
-  createdById        String?  @map("created_by")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  currentStageId     String    @map("current_stage_id")
+  assignedUserId     String?   @map("assigned_user_id")
+  feedback           String?   @db.Text
+  consentAt          DateTime? @map("consent_at")
+  createdById        String?   @map("created_by")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
   job               Job                          @relation(fields: [jobId], references: [id], onDelete: Cascade)
   currentStage      JobStage                     @relation("CandidateCurrentStage", fields: [currentStageId], references: [id], onDelete: Restrict)
@@ -181,6 +214,7 @@ model Candidate {
   assignmentHistory CandidateAssignmentHistory[]
   offerDetails      CandidateOfferDetails?
   notifications     Notification[]
+  answers           CandidateAnswer[]
 
   @@unique([jobId, email])
   @@unique([jobId, phone])
@@ -212,14 +246,14 @@ model CandidateComment {
 }
 
 model CommentAttachment {
-  id          String   @id @default(cuid())
-  commentId   String   @map("comment_id")
-  fileName    String   @map("file_name")
-  filePath    String   @map("file_path")
-  mimeType    String   @map("mime_type")
-  fileSize    BigInt   @map("file_size")
+  id           String   @id @default(cuid())
+  commentId    String   @map("comment_id")
+  fileName     String   @map("file_name")
+  filePath     String   @map("file_path")
+  mimeType     String   @map("mime_type")
+  fileSize     BigInt   @map("file_size")
   uploadedById String   @map("uploaded_by")
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   comment    CandidateComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
   uploadedBy User             @relation("CommentAttachmentUploadedBy", fields: [uploadedById], references: [id], onDelete: Restrict)
@@ -244,13 +278,13 @@ model CommentMention {
 }
 
 model CandidateStageHistory {
-  id           String   @id @default(cuid())
-  candidateId  String   @map("candidate_id")
-  fromStageId  String?  @map("from_stage_id")
-  toStageId    String   @map("to_stage_id")
-  movedById    String?  @map("moved_by")
-  comment      String?  @db.Text
-  createdAt    DateTime @default(now()) @map("created_at")
+  id          String   @id @default(cuid())
+  candidateId String   @map("candidate_id")
+  fromStageId String?  @map("from_stage_id")
+  toStageId   String   @map("to_stage_id")
+  movedById   String?  @map("moved_by")
+  comment     String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
 
   candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   fromStage JobStage? @relation("CandidateStageHistoryFromStage", fields: [fromStageId], references: [id], onDelete: SetNull)
@@ -353,4 +387,39 @@ model EmailOtp {
   @@index([email, createdAt])
   @@index([expiresAt])
   @@map("email_otps")
+}
+
+model JobQuestion {
+  id        String          @id @default(cuid())
+  jobId     String          @map("job_id")
+  label     String
+  type      JobQuestionType
+  options   String[]        @default([])
+  required  Boolean         @default(false)
+  position  Int
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  job     Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  answers CandidateAnswer[]
+
+  @@index([jobId, position])
+  @@map("job_questions")
+}
+
+model CandidateAnswer {
+  id            String   @id @default(cuid())
+  candidateId   String   @map("candidate_id")
+  questionId    String?  @map("question_id")
+  questionLabel String   @map("question_label")
+  value         String   @db.Text
+  position      Int
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  candidate Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  question  JobQuestion? @relation(fields: [questionId], references: [id], onDelete: SetNull)
+
+  @@unique([candidateId, questionId])
+  @@index([questionId])
+  @@map("candidate_answers")
 }

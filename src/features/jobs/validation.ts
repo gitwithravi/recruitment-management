@@ -1,7 +1,13 @@
 import "server-only";
 import { stripHtmlToText } from "@/lib/sanitize-html";
+import {
+  parseJobPostingFields,
+  type JobPostingFieldErrors,
+  type JobPostingFields,
+  type JobPostingRawInput,
+} from "@/features/jobs/posting";
 
-export type JobFieldErrors = {
+export type JobFieldErrors = JobPostingFieldErrors & {
   title?: string;
   description?: string;
   status?: string;
@@ -11,12 +17,12 @@ export type StageFieldErrors = {
   name?: string;
 };
 
-export type CreateJobInput = {
+export type CreateJobInput = JobPostingFields & {
   title: string;
   description: string;
 };
 
-export type UpdateJobInput = {
+export type UpdateJobInput = JobPostingFields & {
   title: string;
   description: string;
   status: "open" | "closed";
@@ -29,8 +35,13 @@ export function parseJobStatus(value: string | undefined): "open" | "closed" | u
   return undefined;
 }
 
-function validateJobText(input: { title: string; description: string }) {
-  const errors: JobFieldErrors = {};
+function validateJobText(input: {
+  title: string;
+  description: string;
+  posting: JobPostingRawInput;
+}) {
+  const { errors: postingErrors, fields: posting } = parseJobPostingFields(input.posting);
+  const errors: JobFieldErrors = { ...postingErrors };
   const title = input.title.trim();
   const description = input.description.trim();
   const descriptionText = stripHtmlToText(description);
@@ -47,19 +58,23 @@ function validateJobText(input: { title: string; description: string }) {
     errors.description = "Job description must be 10,000 characters or fewer.";
   }
 
-  return { errors, title, description };
+  return { errors, title, description, posting };
 }
 
-export function validateCreateJob(input: { title: string; description: string }): {
+export function validateCreateJob(input: {
+  title: string;
+  description: string;
+  posting: JobPostingRawInput;
+}): {
   errors: JobFieldErrors;
   input: CreateJobInput | null;
 } {
-  const { errors, title, description } = validateJobText(input);
+  const { errors, title, description, posting } = validateJobText(input);
   const hasErrors = Object.keys(errors).length > 0;
 
   return {
     errors,
-    input: hasErrors ? null : { title, description },
+    input: hasErrors ? null : { ...posting, title, description },
   };
 }
 
@@ -67,8 +82,9 @@ export function validateUpdateJob(input: {
   title: string;
   description: string;
   status: string | undefined;
+  posting: JobPostingRawInput;
 }): { errors: JobFieldErrors; input: UpdateJobInput | null } {
-  const { errors, title, description } = validateJobText(input);
+  const { errors, title, description, posting } = validateJobText(input);
   const status = parseJobStatus(input.status);
 
   if (!status) {
@@ -79,7 +95,7 @@ export function validateUpdateJob(input: {
 
   return {
     errors,
-    input: hasErrors || !status ? null : { title, description, status },
+    input: hasErrors || !status ? null : { ...posting, title, description, status },
   };
 }
 
