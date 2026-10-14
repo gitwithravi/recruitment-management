@@ -24,10 +24,12 @@ import {
 import { CloseJobDialog } from "@/components/jobs/close-job-dialog";
 import { JobFormDialog } from "@/components/jobs/job-form-dialog";
 import { closeJobAction, setJobPublishedAction } from "@/features/jobs/actions";
+import type { JobPostingFields } from "@/features/jobs/posting";
 import type { JobListItem } from "@/features/jobs/queries";
 
 type JobActionsProps = {
-  job: Pick<JobListItem, "id" | "title" | "description" | "status" | "isPublished">;
+  job: Pick<JobListItem, "id" | "title" | "description" | "status" | "isPublished"> &
+    JobPostingFields;
   align?: "start" | "end";
 };
 

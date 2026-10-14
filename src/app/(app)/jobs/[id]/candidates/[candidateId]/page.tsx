@@ -111,6 +111,15 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
               value={candidate.assignedUser ? `@${candidate.assignedUser.username}` : "Unassigned"}
             />
             <Detail label="Created by" value={formatCandidateCreatedBy(candidate.createdBy)} />
+            {candidate.consentAt ? (
+              <Detail
+                label="Data consent"
+                value={`Given ${new Intl.DateTimeFormat("en-US", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(candidate.consentAt)}`}
+              />
+            ) : null}
           </CardContent>
         </Card>
 
@@ -144,6 +153,27 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
           </Card>
         </div>
       </div>
+
+      {candidate.answers.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Application answers</CardTitle>
+            <CardDescription>Answers submitted from the careers page.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="space-y-4">
+              {candidate.answers.map((answer) => (
+                <div key={answer.id} className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    {answer.questionLabel}
+                  </dt>
+                  <dd className="whitespace-pre-line text-sm break-words">{answer.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {user.role === "admin" ? (
         <Card>

@@ -173,6 +173,7 @@ Each job must have the following fields:
 - Job Description / JD
 - Status
 - Listed on careers (publish flag)
+- Optional posting details shown on the careers page: location, department, work mode (on-site, hybrid, remote), employment type (full-time, part-time, contract, internship), minimum and maximum experience in years, number of openings, and an apply-by date
 - Created At
 - Updated At
 
@@ -212,6 +213,19 @@ Supported job statuses:
 - SMTP must be configured for public applications. If it is not, the job page says applications are unavailable.
 - A successful public application creates a normal candidate in the first stage, unassigned, with source `Website`.
 - Staff can still add candidates internally without OTP.
+- The listing can be searched by keyword and filtered by location, department, work mode and employment type. Filters live in the URL so a filtered view can be shared.
+- After a job's apply-by date (end of that day, UTC) it drops off the listing and its page says it is no longer open. No manual unlisting is needed.
+- Each job page carries schema.org `JobPosting` structured data so job search engines can index it.
+- Applicants must tick a consent checkbox before submitting. The time of consent is stored on the candidate. `PRIVACY_POLICY_URL`, when set, is linked next to the checkbox.
+
+### 6.6 Application questions
+
+- Admin can add up to 20 extra questions per job, from the job's Questions tab: short answer, paragraph, yes/no, or single choice (2 to 20 options).
+- Each question can be required or optional, edited, reordered, and deleted.
+- Questions appear on the careers apply form in the configured order and are validated on the server.
+- Answers are stored on the candidate with a copy of the question text, so editing or deleting a question later never changes or removes answers already submitted.
+- Answers appear on the candidate detail page and as extra columns in the job's candidate CSV export.
+- Attached users can view a job's questions but cannot change them.
 
 ---
 
@@ -591,13 +605,16 @@ The system must support notifications for:
 
 1. Resume assignment
 2. Comment mention using `@username`
+3. New application received through the public careers page
 
 ### 15.2 Notification Channels
 
-Each notification must be sent through:
+Assignment and mention notifications must be sent through:
 
 - In-app notification
 - Email notification
+
+New application notifications are in-app only. They go to every active user attached to the job and every active admin. The candidate receives a confirmation email after applying.
 
 ### 15.3 Notification Content
 
@@ -614,13 +631,19 @@ Mention notification should include:
 - Candidate name
 - Comment excerpt
 
+New application notification should include:
+
+- Job title
+- Candidate name
+
 ### 15.4 Acceptance Criteria
 
 - Assigned user receives in-app notification.
 - Assigned user receives email notification.
 - Mentioned user receives in-app notification.
 - Mentioned user receives email notification.
-- Notifications are not sent to users outside the job.
+- Notifications are not sent to users outside the job (admins excepted).
+- Job members and admins receive an in-app notification for each public application.
 - Notifications contain the required context.
 
 ---
@@ -703,6 +726,9 @@ Suggested fields:
 - title
 - description
 - status
+- is_published
+- location, department, work_mode, employment_type
+- min_experience, max_experience, openings, apply_by
 - created_by
 - created_at
 - updated_at
@@ -886,6 +912,14 @@ Suggested fields:
 - entity_id
 - metadata
 - created_at
+
+### 17.14 job_questions
+
+Extra application questions per job: id, job_id, label, type, options, required, position, created_at, updated_at.
+
+### 17.15 candidate_answers
+
+Answers submitted with a public application: id, candidate_id, question_id (nullable, cleared if the question is deleted), question_label (copied at submit time), value, position, created_at.
 
 ---
 

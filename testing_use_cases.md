@@ -424,6 +424,32 @@ Expected: Notification read state updates.
 Steps: Use read-all action.
 Expected: All current notifications are marked read.
 
+`NOTIF-06` Public application notifies job members and admins
+Steps: Apply to a published job from `/careers` with SMTP configured.
+Expected: Every active user attached to the job and every active admin sees an unread "New application received" notification linking to the candidate. No staff email is sent. The candidate receives a confirmation email.
+
+### Careers postings and application questions
+
+`CAREERS-10` Posting details shown publicly
+Steps: Edit a listed job and set location, department, work mode, employment type, experience range, openings and apply-by date.
+Expected: The details appear as chips on the job's careers card, its careers page and the internal job page. Min experience above max is rejected.
+
+`CAREERS-11` Apply-by date closes the job
+Steps: Set a listed job's apply-by date to yesterday.
+Expected: The job disappears from `/careers`; its page says it is no longer open and offers no apply form.
+
+`CAREERS-12` Search and filter the listing
+Steps: On `/careers`, search a keyword and pick a location or work mode.
+Expected: Only matching jobs show, the URL carries the filters, "Clear filters" resets them, and an empty result says no roles match.
+
+`CAREERS-13` Manage application questions
+Steps: As admin, open a job's Questions tab and add, edit, reorder and delete questions of each type.
+Expected: Changes save and are reflected on the careers apply form. A single-choice question needs 2 to 20 unique options. Attached users see the list read-only.
+
+`CAREERS-14` Answers and consent are required where configured
+Steps: Submit an application leaving a required question blank, or without ticking the consent box.
+Expected: The form shows the error and keeps everything already typed. A complete submission stores the answers and consent time, shown on the candidate page and in the CSV export.
+
 ### Reports
 
 `REPORT-01` Admin can open reports page

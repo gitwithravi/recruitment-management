@@ -1,12 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, BarChart3, Columns3, ListChecks, UsersRound, Workflow } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  Columns3,
+  ListChecks,
+  MessageSquareText,
+  UsersRound,
+  Workflow,
+} from "lucide-react";
 
 import { CandidateBoard } from "@/components/candidates/candidate-board";
+import { CareersJobMeta } from "@/components/careers/careers-job-meta";
 import { JobActions } from "@/components/jobs/job-actions";
 import { JobDescriptionDialog } from "@/components/jobs/job-description-dialog";
 import { JobListedBadge } from "@/components/jobs/job-listed-badge";
+import { JobQuestionsPanel } from "@/components/jobs/job-questions-panel";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { JobUsersPanel } from "@/components/jobs/job-users-panel";
 import { StageConfigPanel } from "@/components/jobs/stage-config-panel";
@@ -14,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCandidateBoardForJob } from "@/features/candidates/queries";
 import { getJobForUser, listAssignableUsersForJob } from "@/features/jobs/queries";
+import { listJobQuestions } from "@/features/questions/queries";
 import { formatAppTitle } from "@/lib/app-config";
 import { cn } from "@/lib/utils";
 import { requireJobAccess } from "@/server/auth/session";
@@ -27,6 +38,7 @@ const tabs = [
   { value: "board", label: "Board", icon: Columns3 },
   { value: "candidates", label: "Candidates", icon: ListChecks },
   { value: "stages", label: "Stages", icon: Workflow },
+  { value: "questions", label: "Questions", icon: MessageSquareText },
   { value: "users", label: "Users", icon: UsersRound },
   { value: "reports", label: "Reports", icon: BarChart3 },
 ] as const;
@@ -75,6 +87,7 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
   const assignableUsers =
     canManageJobs && activeTab === "users" ? await listAssignableUsersForJob(job.id) : [];
   const board = activeTab === "board" ? await getCandidateBoardForJob(job.id) : null;
+  const questions = activeTab === "questions" ? await listJobQuestions(job.id) : [];
 
   return (
     <div className="space-y-6">
@@ -97,6 +110,7 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
               <JobStatusBadge status={job.status} />
               {canManageJobs ? <JobListedBadge isPublished={job.isPublished} /> : null}
             </div>
+            <CareersJobMeta job={job} />
             <JobDescriptionDialog title={job.title} description={job.description} />
           </div>
           {canManageJobs ? <JobActions job={job} /> : null}
@@ -163,6 +177,9 @@ export default async function JobDetailPage({ params, searchParams }: JobDetailP
           stages={job.stages}
           canManageJobs={canManageJobs}
         />
+      ) : null}
+      {activeTab === "questions" ? (
+        <JobQuestionsPanel jobId={job.id} questions={questions} canManageJobs={canManageJobs} />
       ) : null}
       {activeTab === "users" ? (
         <JobUsersPanel

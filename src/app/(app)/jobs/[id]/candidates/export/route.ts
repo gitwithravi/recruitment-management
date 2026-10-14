@@ -14,10 +14,7 @@ type SearchParams = {
   noticePeriod?: string;
 };
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await getCurrentUser();
 
@@ -64,6 +61,20 @@ export async function GET(
   };
 
   const candidates = await listCandidatesForJob(id, filters);
+  const [questions, answers] = await Promise.all([
+    prisma.jobQuestion.findMany({
+      where: { jobId: id },
+      orderBy: { position: "asc" },
+      select: { id: true, label: true },
+    }),
+    prisma.candidateAnswer.findMany({
+      where: { candidateId: { in: candidates.map((candidate) => candidate.id) } },
+      select: { candidateId: true, questionId: true, value: true },
+    }),
+  ]);
+  const answerByKey = new Map(
+    answers.map((answer) => [`${answer.candidateId}:${answer.questionId}`, answer.value]),
+  );
 
   const header = [
     "Name",
@@ -78,6 +89,7 @@ export async function GET(
     "Assigned user",
     "Created at",
     "Updated at",
+    ...questions.map((question) => question.label),
   ];
 
   const rows = candidates.map((candidate) => [
@@ -93,6 +105,7 @@ export async function GET(
     candidate.assignedUser ? candidate.assignedUser.username : "Unassigned",
     candidate.createdAt.toISOString(),
     candidate.updatedAt.toISOString(),
+    ...questions.map((question) => answerByKey.get(`${candidate.id}:${question.id}`) ?? ""),
   ]);
 
   const csv = toCsv([header, ...rows]);

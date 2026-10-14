@@ -20,3 +20,4 @@ export const JOB_NOT_ACCEPTING_MESSAGE = "This job is not accepting applications
 export const ALREADY_APPLIED_MESSAGE = "You have already applied for this job.";
 export const VERIFY_EMAIL_REQUIRED_MESSAGE = "Verify your email before submitting an application.";
 export const EMAIL_MISMATCH_MESSAGE = "Use the email address you just verified.";
+export const CONSENT_REQUIRED_MESSAGE = "Please agree to the data processing terms to apply.";
