@@ -28,7 +28,7 @@ async function createInAppNotification(
   tx: Tx,
   input: {
     recipientUserId: string;
-    type: "resume_assignment" | "comment_mention";
+    type: "resume_assignment" | "comment_mention" | "candidate_applied";
     title: string;
     body: string;
     jobId: string;
@@ -127,5 +127,32 @@ export async function dispatchMentionNotification(
     to: input.recipientEmail,
     subject: `[${APP_NAME}] ${input.actorName} mentioned you in a comment`,
     body: emailBody,
+  });
+}
+
+export async function dispatchApplicationNotifications(
+  tx: Tx,
+  input: {
+    recipientUserIds: string[];
+    candidateName: string;
+    jobTitle: string;
+    jobId: string;
+    candidateId: string;
+  },
+) {
+  if (input.recipientUserIds.length === 0) {
+    return [];
+  }
+
+  return tx.notification.createManyAndReturn({
+    data: input.recipientUserIds.map((recipientUserId) => ({
+      recipientUserId,
+      type: "candidate_applied" as const,
+      title: "New application received",
+      body: `${input.candidateName} applied for ${input.jobTitle} via the careers page.`,
+      relatedJobId: input.jobId,
+      relatedCandidateId: input.candidateId,
+    })),
+    select: { id: true, recipientUserId: true },
   });
 }

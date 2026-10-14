@@ -4,7 +4,7 @@ import { prisma } from "@/db/client";
 
 export type NotificationItem = {
   id: string;
-  type: "resume_assignment" | "comment_mention";
+  type: "resume_assignment" | "comment_mention" | "candidate_applied";
   title: string;
   body: string;
   relatedJobId: string | null;

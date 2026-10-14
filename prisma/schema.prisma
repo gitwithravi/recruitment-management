@@ -33,6 +33,7 @@ enum OfferStatus {
 enum NotificationType {
   resume_assignment
   comment_mention
+  candidate_applied
 }
 
 enum AuditAction {

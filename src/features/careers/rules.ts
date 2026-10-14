@@ -103,3 +103,28 @@ export function validateApplyEmail(value: string) {
 
   return { error: undefined, email };
 }
+
+export function selectApplicationNotificationRecipients(
+  users: Array<{ id: string; isActive: boolean }>,
+) {
+  return [...new Set(users.filter((user) => user.isActive).map((user) => user.id))];
+}
+
+export function buildApplicationConfirmationEmail(input: {
+  appName: string;
+  candidateName: string;
+  jobTitle: string;
+}) {
+  return {
+    subject: `[${input.appName}] We received your application for ${input.jobTitle}`,
+    body: [
+      `Hi ${input.candidateName},`,
+      ``,
+      `Thank you for applying for "${input.jobTitle}". We have received your application and resume.`,
+      ``,
+      `Our team will review it and contact you if your profile matches the role.`,
+      ``,
+      `${input.appName}`,
+    ].join("\n"),
+  };
+}

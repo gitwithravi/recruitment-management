@@ -591,13 +591,16 @@ The system must support notifications for:
 
 1. Resume assignment
 2. Comment mention using `@username`
+3. New application received through the public careers page
 
 ### 15.2 Notification Channels
 
-Each notification must be sent through:
+Assignment and mention notifications must be sent through:
 
 - In-app notification
 - Email notification
+
+New application notifications are in-app only. They go to every active user attached to the job and every active admin. The candidate receives a confirmation email after applying.
 
 ### 15.3 Notification Content
 
@@ -614,13 +617,19 @@ Mention notification should include:
 - Candidate name
 - Comment excerpt
 
+New application notification should include:
+
+- Job title
+- Candidate name
+
 ### 15.4 Acceptance Criteria
 
 - Assigned user receives in-app notification.
 - Assigned user receives email notification.
 - Mentioned user receives in-app notification.
 - Mentioned user receives email notification.
-- Notifications are not sent to users outside the job.
+- Notifications are not sent to users outside the job (admins excepted).
+- Job members and admins receive an in-app notification for each public application.
 - Notifications contain the required context.
 
 ---

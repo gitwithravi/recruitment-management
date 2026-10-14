@@ -8,8 +8,9 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/db/client";
 import { APP_NAME } from "@/lib/app-config";
-import { writeCandidateHistory } from "@/server/audit";
+import { writeAuditLog, writeCandidateHistory } from "@/server/audit";
 import { deleteStoredFile, saveResumeFile } from "@/server/storage";
+import { dispatchApplicationNotifications } from "@/server/notifications/dispatch";
 import { isEmailConfigured, sendEmail } from "@/server/notifications/email";
 import { SlidingWindowLimiter, formatRetryAfter, getClientIp } from "@/server/auth/rate-limit";
 import { findCandidateDuplicate } from "@/features/candidates/rules";
@@ -41,10 +42,12 @@ import {
 } from "@/features/careers/otp";
 import { getPublicJob, hasAppliedWithEmail } from "@/features/careers/queries";
 import {
+  buildApplicationConfirmationEmail,
   canAcceptPublicApplications,
   emailsMatch,
   evaluateOtpChallenge,
   isHoneypotFilled,
+  selectApplicationNotificationRecipients,
   validateApplyEmail,
 } from "@/features/careers/rules";
 import {
@@ -403,6 +406,43 @@ export async function applyToJobAction(
         });
       }
 
+      const [jobMembers, admins] = await Promise.all([
+        tx.jobUser.findMany({
+          where: { jobId },
+          select: { user: { select: { id: true, isActive: true } } },
+        }),
+        tx.user.findMany({
+          where: { role: "admin", isActive: true },
+          select: { id: true, isActive: true },
+        }),
+      ]);
+
+      const notifications = await dispatchApplicationNotifications(tx, {
+        recipientUserIds: selectApplicationNotificationRecipients([
+          ...jobMembers.map((member) => member.user),
+          ...admins,
+        ]),
+        candidateName: candidate.name,
+        jobTitle: job.title,
+        jobId,
+        candidateId: candidate.id,
+      });
+
+      for (const notification of notifications) {
+        await writeAuditLog(tx, {
+          actorId: null,
+          action: "notification_created",
+          entityType: "notification",
+          entityId: notification.id,
+          metadata: {
+            jobId,
+            candidateId: candidate.id,
+            recipientUserId: notification.recipientUserId,
+            type: "candidate_applied",
+          },
+        });
+      }
+
       await writeCandidateHistory(tx, {
         actorId: null,
         action: "candidate_applied",
@@ -416,6 +456,7 @@ export async function applyToJobAction(
           resumeFileName: savedResume.fileName,
           resumeFileSize: savedResume.size,
           origin: "public_apply",
+          notificationIds: notifications.map((notification) => notification.id),
         },
       });
     });
@@ -449,6 +490,13 @@ export async function applyToJobAction(
       generic: "Could not submit your application. Please try again.",
     };
   }
+
+  const confirmation = buildApplicationConfirmationEmail({
+    appName: APP_NAME,
+    candidateName: input.name,
+    jobTitle: job.title,
+  });
+  await sendEmail({ to: input.email, ...confirmation });
 
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath(`/jobs/${jobId}/candidates`);

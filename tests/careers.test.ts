@@ -7,6 +7,7 @@ import {
 } from "../src/features/careers/constants.ts";
 import { generateOtpCode, hashOtpCode, otpHashesMatch } from "../src/features/careers/otp.ts";
 import {
+  buildApplicationConfirmationEmail,
   canAcceptPublicApplications,
   canPublishJob,
   emailsMatch,
@@ -17,6 +18,7 @@ import {
   isHoneypotFilled,
   isJobListedOnCareers,
   isOtpAttemptAllowed,
+  selectApplicationNotificationRecipients,
   validateApplyEmail,
 } from "../src/features/careers/rules.ts";
 import {
@@ -180,4 +182,29 @@ test("sliding window limiter blocks extra events inside the window", () => {
   assert.equal(limiter.consume("ip", now + 10).allowed, true);
   assert.equal(limiter.consume("ip", now + 20).allowed, false);
   assert.equal(limiter.consume("ip", now + 1001).allowed, true);
+});
+
+test("application notifications go to active members and admins once each", () => {
+  assert.deepEqual(
+    selectApplicationNotificationRecipients([
+      { id: "member", isActive: true },
+      { id: "inactive-member", isActive: false },
+      { id: "admin-member", isActive: true },
+      { id: "admin-member", isActive: true },
+      { id: "admin", isActive: true },
+    ]),
+    ["member", "admin-member", "admin"],
+  );
+  assert.deepEqual(selectApplicationNotificationRecipients([]), []);
+});
+
+test("application confirmation email names the job and candidate", () => {
+  const email = buildApplicationConfirmationEmail({
+    appName: "Recruit",
+    candidateName: "Ada",
+    jobTitle: "Backend Engineer",
+  });
+  assert.equal(email.subject, "[Recruit] We received your application for Backend Engineer");
+  assert.match(email.body, /^Hi Ada,/);
+  assert.match(email.body, /"Backend Engineer"/);
 });

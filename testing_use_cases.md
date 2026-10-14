@@ -424,6 +424,10 @@ Expected: Notification read state updates.
 Steps: Use read-all action.
 Expected: All current notifications are marked read.
 
+`NOTIF-06` Public application notifies job members and admins
+Steps: Apply to a published job from `/careers` with SMTP configured.
+Expected: Every active user attached to the job and every active admin sees an unread "New application received" notification linking to the candidate. No staff email is sent. The candidate receives a confirmation email.
+
 ### Reports
 
 `REPORT-01` Admin can open reports page
