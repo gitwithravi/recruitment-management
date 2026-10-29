@@ -20,6 +20,11 @@ export function proxy(request: NextRequest) {
   }
 
   if (!hasSession) {
+    // The site root is the public careers page for visitors; staff sign in at /login.
+    if (pathname === "/") {
+      return NextResponse.redirect(new URL("/careers", request.url));
+    }
+
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
