@@ -10,17 +10,21 @@ export async function CareersHeader() {
 
   return (
     <header className="border-b bg-background">
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
+      <div className="mx-auto flex min-h-14 w-full max-w-5xl items-center justify-between px-4 py-2">
         <Link
           href="/careers"
           className="inline-flex items-center gap-2 font-semibold tracking-tight"
         >
           <AppLogo
             logoUrl={logoUrl}
-            className="size-7 rounded-md"
-            fallback={<BriefcaseBusiness className="size-5" aria-hidden="true" />}
+            alt={appName}
+            fallback={
+              <>
+                <BriefcaseBusiness className="size-5" aria-hidden="true" />
+                <span>{appName}</span>
+              </>
+            }
           />
-          <span>{appName}</span>
           <span className="text-sm font-medium text-muted-foreground">Careers</span>
         </Link>
         <ThemeToggle />

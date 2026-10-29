@@ -56,7 +56,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
-        <div className="flex h-14 items-center gap-2 px-4 sm:px-6 lg:px-8">
+        <div className="flex min-h-14 items-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
           <Button
             variant="ghost"
             size="icon"
@@ -82,14 +82,16 @@ export function AppShell({
           <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
             <AppLogo
               logoUrl={logoUrl}
-              className="size-7 rounded-md"
+              alt={appName}
               fallback={
-                <span className="inline-flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <BriefcaseBusiness className="size-4" aria-hidden="true" />
-                </span>
+                <>
+                  <span className="inline-flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <BriefcaseBusiness className="size-4" aria-hidden="true" />
+                  </span>
+                  <span>{appName}</span>
+                </>
               }
             />
-            <span>{appName}</span>
           </Link>
           <div className="ml-auto flex items-center gap-1">
             <ThemeToggle />

@@ -66,11 +66,11 @@ export function BrandingForm({
 
       <div className="space-y-2">
         <Label htmlFor="logo">Logo</Label>
-        <div className="flex items-center gap-4">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-lg border bg-muted/30 p-2">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex min-h-16 w-fit min-w-16 shrink-0 items-center justify-center rounded-lg border bg-muted/30 p-2">
             <AppLogo
               logoUrl={shownLogo}
-              className="size-full"
+              alt="Logo preview"
               fallback={
                 <span className="inline-flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <BriefcaseBusiness className="size-5" aria-hidden="true" />
@@ -102,7 +102,8 @@ export function BrandingForm({
           <p className="text-xs text-destructive">{state.errors.logo}</p>
         ) : (
           <p className="text-xs text-muted-foreground">
-            PNG, JPEG, or WebP up to 2 MB. A square image works best.
+            PNG, JPEG, or WebP up to 2 MB. Shown 220px wide with height to match, so a wide logo
+            (for example 440×100) works best. It replaces the app name text wherever it appears.
           </p>
         )}
       </div>
