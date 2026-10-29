@@ -15,11 +15,10 @@ import {
 } from "@/components/ui/table";
 import { AuditAction, type AuditAction as AuditActionType } from "@/generated/prisma/client";
 import { listAuditLogsForAdmin, type AuditLogListItem } from "@/features/audit/queries";
-import { formatAppTitle } from "@/lib/app-config";
 import { requireAdmin } from "@/server/auth/session";
 
 export const metadata: Metadata = {
-  title: formatAppTitle("Audit log"),
+  title: "Audit log",
 };
 
 type AdminAuditPageProps = {

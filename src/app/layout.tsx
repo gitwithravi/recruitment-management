@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
-import { APP_NAME } from "@/lib/app-config";
+import { connection } from "next/server";
+import { getBranding } from "@/features/settings/queries";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,10 +15,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: APP_NAME,
-  description: "Internal recruitment workflow management",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  // Branding is admin-editable at runtime, so read it per request rather than at build time.
+  await connection();
+  const { appName, logoUrl } = await getBranding();
+
+  return {
+    title: { default: appName, template: `%s · ${appName}` },
+    description: "Internal recruitment workflow management",
+    ...(logoUrl ? { icons: { icon: logoUrl } } : {}),
+  };
+}
 
 export default function RootLayout({
   children,

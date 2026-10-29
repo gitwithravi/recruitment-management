@@ -25,7 +25,6 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { getCandidateBoardForJob } from "@/features/candidates/queries";
 import { getJobForUser, listAssignableUsersForJob } from "@/features/jobs/queries";
 import { listJobQuestions } from "@/features/questions/queries";
-import { formatAppTitle } from "@/lib/app-config";
 import { cn } from "@/lib/utils";
 import { requireJobAccess } from "@/server/auth/session";
 
@@ -55,7 +54,7 @@ export async function generateMetadata({
   const job = await getJobForUser(user, id);
 
   return {
-    title: formatAppTitle(job ? job.title : "Job"),
+    title: job ? job.title : "Job",
   };
 }
 

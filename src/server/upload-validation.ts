@@ -30,3 +30,24 @@ export function validateAttachmentFile(
 
   return undefined;
 }
+
+export const LOGO_MAX_SIZE_BYTES = 2 * 1024 * 1024;
+
+// SVG is deliberately excluded: it can carry scripts and the logo is served from our own origin.
+export const ALLOWED_LOGO_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+
+export function validateLogoFile(file: Pick<File, "size" | "type"> | null) {
+  if (!file || file.size === 0) {
+    return undefined;
+  }
+
+  if (file.size > LOGO_MAX_SIZE_BYTES) {
+    return "Logo must be 2 MB or smaller.";
+  }
+
+  if (!ALLOWED_LOGO_TYPES.has(file.type)) {
+    return "Upload a PNG, JPEG, or WebP image.";
+  }
+
+  return undefined;
+}

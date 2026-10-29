@@ -22,7 +22,6 @@ import {
   reportKinds,
   type ReportKind,
 } from "@/features/reports/queries";
-import { formatAppTitle } from "@/lib/app-config";
 import { requireUser } from "@/server/auth/session";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +30,7 @@ type ReportsPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: formatAppTitle("Reports"),
+  title: "Reports",
 };
 
 const ALL_JOBS = "all";

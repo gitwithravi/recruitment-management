@@ -7,6 +7,7 @@ import {
   BriefcaseBusiness,
   ClipboardList,
   LayoutDashboard,
+  Settings,
   UsersRound,
 } from "lucide-react";
 
@@ -26,6 +27,7 @@ const navItems: NavItem[] = [
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/admin/users", label: "Users", icon: UsersRound, adminOnly: true },
   { href: "/admin/audit", label: "Audit", icon: ClipboardList, adminOnly: true },
+  { href: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },
 ];
 
 function isActive(pathname: string, href: string, exact?: boolean) {
