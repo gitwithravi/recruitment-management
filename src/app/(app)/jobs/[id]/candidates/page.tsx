@@ -8,7 +8,6 @@ import { CandidateListExplorer } from "@/components/candidates/candidate-list-ex
 import { Button } from "@/components/ui/button";
 import { getCandidateFilterOptions, queryCandidates } from "@/features/candidates/queries";
 import { getJobForUser } from "@/features/jobs/queries";
-import { formatAppTitle } from "@/lib/app-config";
 import { requireJobAccess } from "@/server/auth/session";
 
 type CandidatesPageProps = {
@@ -16,7 +15,7 @@ type CandidatesPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: formatAppTitle("Candidates"),
+  title: "Candidates",
 };
 
 export default async function CandidatesPage({ params }: CandidatesPageProps) {

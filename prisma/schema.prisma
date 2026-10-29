@@ -85,6 +85,7 @@ enum AuditAction {
   job_question_created
   job_question_updated
   job_question_deleted
+  settings_updated
 }
 
 model User {
@@ -422,4 +423,14 @@ model CandidateAnswer {
   @@unique([candidateId, questionId])
   @@index([questionId])
   @@map("candidate_answers")
+}
+
+model AppSettings {
+  id           String   @id @default("default")
+  appName      String?  @map("app_name")
+  logoFilePath String?  @map("logo_file_path")
+  logoMimeType String?  @map("logo_mime_type")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
 }

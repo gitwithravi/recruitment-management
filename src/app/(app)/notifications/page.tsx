@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 
 import { NotificationsPage } from "@/components/notifications/notifications-page";
 import { listNotifications } from "@/features/notifications/queries";
-import { formatAppTitle } from "@/lib/app-config";
 import { requireUser } from "@/server/auth/session";
 
 export const metadata: Metadata = {
-  title: formatAppTitle("Notifications"),
+  title: "Notifications",
 };
 
 export default async function NotificationsRoute() {

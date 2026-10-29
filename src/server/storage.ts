@@ -8,6 +8,8 @@ const RESUME_ROOT = path.join(STORAGE_ROOT, "resumes");
 const RESUME_RELATIVE_ROOT = path.join("storage", "resumes");
 const ATTACHMENT_ROOT = path.join(STORAGE_ROOT, "attachments");
 const ATTACHMENT_RELATIVE_ROOT = path.join("storage", "attachments");
+const BRANDING_ROOT = path.join(STORAGE_ROOT, "branding");
+const BRANDING_RELATIVE_ROOT = path.join("storage", "branding");
 
 function safeFileName(fileName: string) {
   const parsed = path.parse(fileName);
@@ -111,4 +113,42 @@ export async function readAttachmentFile(relativePath: string) {
     path.relative(ATTACHMENT_RELATIVE_ROOT, normalized),
   );
   return readFile(absolutePath);
+}
+
+export async function saveLogoFile(file: File) {
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const fileName = `${Date.now()}-${safeFileName(file.name)}`;
+  const absolutePath = path.join(BRANDING_ROOT, fileName);
+
+  await mkdir(BRANDING_ROOT, { recursive: true });
+  await writeFile(absolutePath, bytes);
+
+  return {
+    relativePath: path.relative(process.cwd(), absolutePath),
+    mimeType: file.type,
+  };
+}
+
+export async function readLogoFile(relativePath: string) {
+  const normalized = path.normalize(relativePath);
+
+  if (!normalized.startsWith(`${BRANDING_RELATIVE_ROOT}${path.sep}`)) {
+    throw new Error("Invalid logo path.");
+  }
+
+  const absolutePath = path.join(BRANDING_ROOT, path.relative(BRANDING_RELATIVE_ROOT, normalized));
+  return readFile(absolutePath);
+}
+
+export async function deleteLogoFile(relativePath: string | null | undefined) {
+  if (!relativePath) return;
+
+  const normalized = path.normalize(relativePath);
+
+  if (!normalized.startsWith(`${BRANDING_RELATIVE_ROOT}${path.sep}`)) {
+    return;
+  }
+
+  const absolutePath = path.join(BRANDING_ROOT, path.relative(BRANDING_RELATIVE_ROOT, normalized));
+  await rm(absolutePath, { force: true });
 }

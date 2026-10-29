@@ -7,7 +7,6 @@ import { CandidateBoard } from "@/components/candidates/candidate-board";
 import { Button } from "@/components/ui/button";
 import { getCandidateBoardForJob } from "@/features/candidates/queries";
 import { getJobForUser } from "@/features/jobs/queries";
-import { formatAppTitle } from "@/lib/app-config";
 import { requireJobAccess } from "@/server/auth/session";
 
 type JobBoardPageProps = {
@@ -20,7 +19,7 @@ export async function generateMetadata({ params }: JobBoardPageProps): Promise<M
   const job = await getJobForUser(user, id);
 
   return {
-    title: formatAppTitle(job ? `${job.title} Board` : "Job Board"),
+    title: job ? `${job.title} Board` : "Job Board",
   };
 }
 

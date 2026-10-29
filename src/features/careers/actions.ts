@@ -7,7 +7,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/db/client";
-import { APP_NAME } from "@/lib/app-config";
 import { writeAuditLog, writeCandidateHistory } from "@/server/audit";
 import { deleteStoredFile, saveResumeFile } from "@/server/storage";
 import { dispatchApplicationNotifications } from "@/server/notifications/dispatch";
@@ -42,6 +41,7 @@ import {
   otpHashesMatch,
 } from "@/features/careers/otp";
 import { getPublicJob, hasAppliedWithEmail } from "@/features/careers/queries";
+import { getAppName } from "@/features/settings/queries";
 import {
   buildApplicationConfirmationEmail,
   canAcceptPublicApplications,
@@ -184,7 +184,7 @@ export async function sendApplyOtpAction(
 
   const sent = await sendEmail({
     to: email,
-    subject: `${APP_NAME} verification code`,
+    subject: `${await getAppName()} verification code`,
     body: `Your verification code is ${code}. It expires in 10 minutes.\n\nIf you did not request this, you can ignore this email.`,
   });
 
@@ -519,7 +519,7 @@ export async function applyToJobAction(
   }
 
   const confirmation = buildApplicationConfirmationEmail({
-    appName: APP_NAME,
+    appName: await getAppName(),
     candidateName: input.name,
     jobTitle: job.title,
   });

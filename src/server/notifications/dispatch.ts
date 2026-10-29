@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
-import { APP_NAME } from "@/lib/app-config";
+import { getAppName } from "@/features/settings/queries";
 import { sendEmail } from "@/server/notifications/email";
 
 type Tx = PrismaClient | Prisma.TransactionClient;
@@ -73,6 +73,7 @@ export async function dispatchAssignmentNotification(
     candidateId: input.candidateId,
   });
 
+  const appName = await getAppName();
   const emailBody = [
     `Hi,`,
     ``,
@@ -81,14 +82,14 @@ export async function dispatchAssignmentNotification(
     input.comment ? `Comment from ${input.actorName}:` : null,
     input.comment ? input.comment : null,
     ``,
-    `You can view this candidate in ${APP_NAME}.`,
+    `You can view this candidate in ${appName}.`,
   ]
     .filter((line): line is string => line !== null)
     .join("\n");
 
   await sendNotificationEmail({
     to: input.recipientEmail,
-    subject: `[${APP_NAME}] ${input.actorName} assigned ${input.candidateName} to you`,
+    subject: `[${appName}] ${input.actorName} assigned ${input.candidateName} to you`,
     body: emailBody,
   });
 }
@@ -113,6 +114,7 @@ export async function dispatchMentionNotification(
     candidateId: input.candidateId,
   });
 
+  const appName = await getAppName();
   const emailBody = [
     `Hi,`,
     ``,
@@ -120,12 +122,12 @@ export async function dispatchMentionNotification(
     ``,
     `"${excerpt}"`,
     ``,
-    `You can view this candidate in ${APP_NAME}.`,
+    `You can view this candidate in ${appName}.`,
   ].join("\n");
 
   await sendNotificationEmail({
     to: input.recipientEmail,
-    subject: `[${APP_NAME}] ${input.actorName} mentioned you in a comment`,
+    subject: `[${appName}] ${input.actorName} mentioned you in a comment`,
     body: emailBody,
   });
 }

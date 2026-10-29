@@ -6,7 +6,6 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getPublicJob } from "@/features/careers/queries";
 import { getPublicJobPageState } from "@/features/careers/rules";
-import { formatAppTitle } from "@/lib/app-config";
 
 type AppliedPageProps = {
   params: Promise<{ jobId: string }>;
@@ -17,7 +16,7 @@ export async function generateMetadata({ params }: AppliedPageProps): Promise<Me
   const job = await getPublicJob(jobId);
 
   return {
-    title: formatAppTitle(job ? `Applied · ${job.title}` : "Applied"),
+    title: job ? `Applied · ${job.title}` : "Applied",
   };
 }
 

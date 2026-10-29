@@ -10,12 +10,14 @@ import {
   hasActiveCareersFilters,
   parseCareersFilters,
 } from "@/features/careers/rules";
-import { APP_NAME, formatAppTitle } from "@/lib/app-config";
+import { getAppName } from "@/features/settings/queries";
 
-export const metadata: Metadata = {
-  title: formatAppTitle("Careers"),
-  description: `Open roles at ${APP_NAME}`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Careers",
+    description: `Open roles at ${await getAppName()}`,
+  };
+}
 
 type CareersPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

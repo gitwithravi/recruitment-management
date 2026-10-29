@@ -11,7 +11,8 @@ import { getPublicJob, hasAppliedWithEmail } from "@/features/careers/queries";
 import { getPublicJobPageState } from "@/features/careers/rules";
 import { getVerifiedApplyEmail } from "@/features/careers/session";
 import { buildJobPostingJsonLd, serializeJsonLd } from "@/features/jobs/posting";
-import { APP_NAME, APP_URL, PRIVACY_POLICY_URL, formatAppTitle } from "@/lib/app-config";
+import { getAppName } from "@/features/settings/queries";
+import { APP_URL, PRIVACY_POLICY_URL } from "@/lib/app-config";
 import { isEmailConfigured } from "@/server/notifications/email";
 
 type CareersJobPageProps = {
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: CareersJobPageProps): Promise
   const state = getPublicJobPageState(job);
 
   return {
-    title: formatAppTitle(state === "not_found" || !job ? "Job" : job.title),
+    title: state === "not_found" || !job ? "Job" : job.title,
   };
 }
 
@@ -45,7 +46,7 @@ export default async function CareersJobPage({ params }: CareersJobPageProps) {
           title: job.title,
           descriptionHtml: job.description,
           datePosted: job.createdAt,
-          organizationName: APP_NAME,
+          organizationName: await getAppName(),
           url: `${await getBaseUrl()}/careers/${job.id}`,
           posting: job,
         })

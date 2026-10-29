@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { BriefcaseBusiness, Menu, PanelLeft, X } from "lucide-react";
 
+import { AppLogo } from "@/components/branding/app-logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
@@ -18,12 +19,14 @@ const SIDEBAR_WIDTH = "15rem";
 
 export function AppShell({
   appName,
+  logoUrl,
   children,
   user,
   initialNotifications,
   initialUnreadCount,
 }: {
   appName: string;
+  logoUrl: string | null;
   children: React.ReactNode;
   user: CurrentUser;
   initialNotifications: NotificationItem[];
@@ -77,9 +80,15 @@ export function AppShell({
             <Menu className="size-4" aria-hidden="true" />
           </Button>
           <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="inline-flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BriefcaseBusiness className="size-4" aria-hidden="true" />
-            </span>
+            <AppLogo
+              logoUrl={logoUrl}
+              className="size-7 rounded-md"
+              fallback={
+                <span className="inline-flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <BriefcaseBusiness className="size-4" aria-hidden="true" />
+                </span>
+              }
+            />
             <span>{appName}</span>
           </Link>
           <div className="ml-auto flex items-center gap-1">

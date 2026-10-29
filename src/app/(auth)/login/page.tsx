@@ -4,7 +4,8 @@ import { ArrowUpRight, KanbanSquare, ShieldCheck, UsersRound } from "lucide-reac
 
 import { LoginForm } from "@/components/auth/login-form";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { APP_NAME } from "@/lib/app-config";
+import { AppLogo } from "@/components/branding/app-logo";
+import { getBranding } from "@/features/settings/queries";
 import { getCurrentUser } from "@/server/auth/session";
 
 const highlights = [
@@ -32,6 +33,8 @@ export default async function LoginPage() {
     redirect("/");
   }
 
+  const { appName, logoUrl } = await getBranding();
+
   return (
     <main className="relative grid min-h-screen grid-cols-1 lg:grid-cols-2">
       <div className="absolute top-4 right-4 z-20">
@@ -50,8 +53,12 @@ export default async function LoginPage() {
           }}
         />
         <div className="relative flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <KanbanSquare className="size-6" aria-hidden="true" />
-          <span>{APP_NAME}</span>
+          <AppLogo
+            logoUrl={logoUrl}
+            className="size-9 rounded-md bg-primary-foreground p-1"
+            fallback={<KanbanSquare className="size-6" aria-hidden="true" />}
+          />
+          <span>{appName}</span>
         </div>
 
         <div className="relative space-y-6">
@@ -87,17 +94,23 @@ export default async function LoginPage() {
         </div>
 
         <p className="relative text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} {APP_NAME}. Internal use only.
+          © {new Date().getFullYear()} {appName}. Internal use only.
         </p>
       </section>
 
       <section className="flex items-center justify-center bg-muted/30 px-4 py-10 sm:px-6">
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-3 text-center lg:hidden">
-            <div className="mx-auto inline-flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <KanbanSquare className="size-6" aria-hidden="true" />
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight">{APP_NAME}</h1>
+            <AppLogo
+              logoUrl={logoUrl}
+              className="mx-auto size-12 rounded-xl"
+              fallback={
+                <div className="mx-auto inline-flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                  <KanbanSquare className="size-6" aria-hidden="true" />
+                </div>
+              }
+            />
+            <h1 className="text-2xl font-semibold tracking-tight">{appName}</h1>
             <p className="text-sm text-muted-foreground">Sign in with your internal account.</p>
           </div>
 
