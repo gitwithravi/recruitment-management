@@ -53,12 +53,17 @@ export default async function LoginPage() {
           }}
         />
         <div className="relative flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <AppLogo
-            logoUrl={logoUrl}
-            className="size-9 rounded-md bg-primary-foreground p-1"
-            fallback={<KanbanSquare className="size-6" aria-hidden="true" />}
-          />
-          <span>{appName}</span>
+          {logoUrl ? (
+            // Light backing keeps dark logos readable on the primary-coloured panel.
+            <span className="inline-block rounded-lg bg-primary-foreground p-2">
+              <AppLogo logoUrl={logoUrl} alt={appName} fallback={null} />
+            </span>
+          ) : (
+            <>
+              <KanbanSquare className="size-6" aria-hidden="true" />
+              <span>{appName}</span>
+            </>
+          )}
         </div>
 
         <div className="relative space-y-6">
@@ -103,14 +108,17 @@ export default async function LoginPage() {
           <div className="space-y-3 text-center lg:hidden">
             <AppLogo
               logoUrl={logoUrl}
-              className="mx-auto size-12 rounded-xl"
+              alt=""
+              className="mx-auto"
               fallback={
                 <div className="mx-auto inline-flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                   <KanbanSquare className="size-6" aria-hidden="true" />
                 </div>
               }
             />
-            <h1 className="text-2xl font-semibold tracking-tight">{appName}</h1>
+            <h1 className={logoUrl ? "sr-only" : "text-2xl font-semibold tracking-tight"}>
+              {appName}
+            </h1>
             <p className="text-sm text-muted-foreground">Sign in with your internal account.</p>
           </div>
 
